@@ -1,9 +1,10 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from apps.kanban.models import Usuario
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = User
+        model = Usuario
         fields = '__all__'
 
 
