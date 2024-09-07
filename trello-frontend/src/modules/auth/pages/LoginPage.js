@@ -1,4 +1,5 @@
 import { ReactComponent as Google } from "../../auth/icons/icons8-google.svg";
+import { ReactComponent as TrelloLogo } from "../../auth/icons/trello-icon.svg";
 
 export function LoginPage() {
   const login_loading = false;
@@ -11,7 +12,11 @@ export function LoginPage() {
   const renderForm = () => {
     return (
       <div className="flex flex-col items-center p-6 shadow-lg rounded-lg shadow/lg bg-white gap-4 w-[400px]">
-        <div className="text-4xl p-4 px-20 font-bold text-gray-700">Trello</div>
+         <div className="flex flex-row justify-around items-center">
+          <TrelloLogo className="w-8 h-8" />
+          <div className="text-4xl p-4 font-bold text-gray-700">Trello</div>
+        </div>
+        
         <span className="font-semibold text-gray-700">
           Iniciar sesión para continuar
         </span>
