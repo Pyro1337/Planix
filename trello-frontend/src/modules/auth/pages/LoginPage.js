@@ -2,8 +2,10 @@ import { useState } from "react";
 import { ReactComponent as Google } from "../../auth/icons/icons8-google.svg";
 import { ReactComponent as TrelloLogo } from "../../auth/icons/trello-icon.svg";
 import { ExclamationDiamondFill } from "react-bootstrap-icons";
+import { useNavigate } from "react-router-dom";
 
 export function LoginPage() {
+  const navigate = useNavigate();
   const login_loading = false;
   const [email, setEmail] = useState("");
   const [emailValid, setEmailValid] = useState(false);
@@ -19,7 +21,10 @@ export function LoginPage() {
       setError("");
       setEmailValid(true);
     }
-    console.log(email, password);
+  };
+  const onLoginAccess = (e) => {
+    e.preventDefault(); // Evitar el comportamiento por defecto del submit
+    navigate("/tableros");
   };
   const onChange = (field) => (e) => {
     const value = e.target.value;
@@ -42,10 +47,7 @@ export function LoginPage() {
           Iniciar sesión para continuar
         </span>
         {!login_loading && (
-          <form
-            onSubmit={onLoginPress}
-            className={"w-full flex flex-col gap-8"}
-          >
+          <form className={"w-full flex flex-col gap-8"}>
             <div className="flex flex-col gap-2 text-gray-600">
               <div className="input flex flex-col">
                 <input
@@ -77,13 +79,26 @@ export function LoginPage() {
                 </div>
               )}
               <div className="input flex flex-col ">
-                <button
-                  disabled={false}
-                  type="submit"
-                  className={`bg-opacity-100 hover:duration-75 hover:bg-blue-800 bg-blue-700 text-white font-semibold leading-6 text-md py-2 px-4 rounded transition-all ease-linear duration-400 `}
-                >
-                  {emailValid ? "Iniciar sesión" : "Continuar"}
-                </button>
+                {emailValid && (
+                  <button
+                    disabled={false}
+                    type="button"
+                    onClick={onLoginAccess}
+                    className={`bg-opacity-100 hover:duration-75 hover:bg-blue-800 bg-blue-700 text-white font-semibold leading-6 text-md py-2 px-4 rounded transition-all ease-linear duration-400 `}
+                  >
+                    {"Iniciar sesión"}
+                  </button>
+                )}
+                {!emailValid && (
+                  <button
+                    disabled={false}
+                    type="button"
+                    onClick={onLoginPress}
+                    className={`bg-opacity-100 hover:duration-75 hover:bg-blue-800 bg-blue-700 text-white font-semibold leading-6 text-md py-2 px-4 rounded transition-all ease-linear duration-400 `}
+                  >
+                    {"Continuar"}
+                  </button>
+                )}
               </div>
               <div className="flex flex-col items-center font-semibold gap-4 mt-4">
                 <span className="text-sm">O continúa con:</span>
