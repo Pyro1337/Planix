@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ReactComponent as Google } from "../../auth/icons/icons8-google.svg";
-import { ReactComponent as TrelloLogo } from "../../auth/icons/trello-icon.svg";
+import { ReactComponent as TrelloLogo } from "../../common/icons/trello-icon.svg";
 import { ExclamationDiamondFill } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 

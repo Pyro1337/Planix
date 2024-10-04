@@ -8,7 +8,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #1D2125; /* Cambia este color al que prefieras */
   margin: 0;
-  font-family: 'Arial', sans-serif; /* O cualquier fuente que prefieras */
+  font-family: "Gill Sans", sans-serif; /* O cualquier fuente que prefieras */
   color: #B6C2CF; /* Cambia el color de texto si es necesario */
 }
 
