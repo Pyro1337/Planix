@@ -79,9 +79,16 @@ export function TableroPage() {
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="rounded-lg p-4 shadow-lg bg-black w-[300px] h-full"
+                    className={`rounded-lg p-4 shadow-lg bg-black w-[300px] h-full ${
+                      column.items.length > 1 ? "border-2 border-red-500" : ""
+                    }`}
                   >
                     <h2 className="font-bold text-md mb-2">{column.name}</h2>
+                    {column.items.length > 1 && (
+                      <span className="text-sm text-red-500">
+                        Cantidad máxima de tareas
+                      </span>
+                    )}
                     <div className="">
                       {column.items.map((item, index) => (
                         <Draggable key={item} draggableId={item} index={index}>
