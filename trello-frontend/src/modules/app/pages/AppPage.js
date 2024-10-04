@@ -1,4 +1,5 @@
 import { RootRoutes } from "../../../root/rootRoutes";
+import { AppBar } from "../../common/components/AppBar";
 import { ScrollToTop } from "../components/ScrollToTop";
 
 export function AppPage() {

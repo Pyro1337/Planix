@@ -13,11 +13,9 @@ const routes = [...authRoutes, ...tableroRoutes];
 
 function App() {
   return (
-    <Provider store={rootStore}>
-      <ReduxRouter
-        history={browserHistory}
-        store={rootStore}
-        children={
+    <>
+      <Provider store={rootStore}>
+        <ReduxRouter history={browserHistory} store={rootStore}>
           <Screen>
             <Routes>
               {routes.map((route, idx) => (
@@ -26,10 +24,10 @@ function App() {
               <Route path={"/*"} element={<AppPage />} />
             </Routes>
           </Screen>
-        }
-      ></ReduxRouter>
-      <ToastContainer />
-    </Provider>
+        </ReduxRouter>
+        <ToastContainer />
+      </Provider>
+    </>
   );
 }
 
