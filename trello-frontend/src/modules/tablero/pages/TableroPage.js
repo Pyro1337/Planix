@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import { TableroLayout } from "../components/TableroLayout";
 import React, { useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import { Plus } from "react-bootstrap-icons";
+import { Plus, X } from "react-bootstrap-icons";
 
 const initialColumns = {
   pendiente: {
@@ -22,6 +22,26 @@ const initialColumns = {
 export function TableroPage() {
   const tableros = useSelector((state) => state.tablero.tableros);
   const [columns, setColumns] = useState(initialColumns);
+  const [createTablero, setCreateTablero] = useState(false);
+  const [tableroName, setTableroName] = useState("");
+
+  const onChange = (field) => (e) => {
+    if (field === "tableroName") {
+      setTableroName(e.target.value);
+    }
+  };
+
+  const addNewList = () => {
+    setColumns({
+      ...columns,
+      [tableroName.replace(" ", "")]: {
+        name: tableroName,
+        items: [],
+      },
+    });
+    setCreateTablero(false);
+    setTableroName("");
+  };
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
@@ -91,10 +111,37 @@ export function TableroPage() {
                 )}
               </Droppable>
             ))}
-            <div className="flex flex-row items-center font-bold text-white text-sm rounded-lg p-2 bg-[#AA6D8B] shadow-lg w-[300px] h-full cursor-pointer hover:bg-[#9c627f]">
-              <Plus className="w-6 h-6" />
-              Añade otra lista
-            </div>
+            {!createTablero && (
+              <div
+                className="flex flex-row items-center font-bold text-white text-sm rounded-lg p-2 bg-[#AA6D8B] shadow-lg w-[300px] h-full cursor-pointer hover:bg-[#9c627f]"
+                onClick={() => setCreateTablero(true)}
+              >
+                <Plus className="w-6 h-6" />
+                Añade otra lista
+              </div>
+            )}
+            {createTablero && (
+              <div className="text-sm rounded-lg p-2 bg-black shadow-lg w-[300px] h-full">
+                <input
+                  className="bg-custom-body p-1 rounded w-full"
+                  placeholder="Introduce el nombre de la lista"
+                  type="text"
+                  onChange={onChange("tableroName")}
+                />
+                <div className="flex flex-row items-center gap-2 mt-2">
+                  <button
+                    className="bg-blue-500 p-2 text-black rounded hover:bg-blue-400"
+                    onClick={addNewList}
+                  >
+                    Añadir lista
+                  </button>
+                  <X
+                    className="w-6 h-6 hover:bg-gray-500 cursor-pointer rounded"
+                    onClick={() => setCreateTablero(false)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </DragDropContext>
       </div>
