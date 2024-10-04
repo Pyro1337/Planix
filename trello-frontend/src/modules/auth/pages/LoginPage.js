@@ -24,7 +24,7 @@ export function LoginPage() {
   };
   const onLoginAccess = (e) => {
     e.preventDefault(); // Evitar el comportamiento por defecto del submit
-    navigate("/tableros");
+    navigate("/espacio-trabajo");
   };
   const onChange = (field) => (e) => {
     const value = e.target.value;

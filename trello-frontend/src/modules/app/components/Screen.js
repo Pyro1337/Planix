@@ -17,10 +17,5 @@ export function Screen({ children }) {
     }
   }, []);
 
-  return (
-    <>
-      {location.pathname !== "/auth/login" && <AppBar />}
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

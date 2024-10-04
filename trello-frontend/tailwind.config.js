@@ -5,6 +5,7 @@ module.exports = {
     extend: {
       colors: {
         "custom-body": "#1D2125",
+        "custom-text": "#B6C2CF",
       },
     },
   },

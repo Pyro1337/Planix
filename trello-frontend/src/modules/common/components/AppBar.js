@@ -1,5 +1,6 @@
 import { CaretDown, Bell, InfoCircle } from "react-bootstrap-icons";
 import { ReactComponent as TrelloLogo } from "../../common/icons/trello-icon.svg";
+import { useNavigate } from "react-router-dom";
 
 const NavItem = ({ label }) => (
   <div className="flex flex-row justify-center items-center gap-1 rounded-sm px-3 py-2 hover:bg-gray-600 cursor-pointer">
@@ -9,13 +10,19 @@ const NavItem = ({ label }) => (
 );
 
 export function AppBar() {
+  const navigate = useNavigate();
   const items = ["Espacios de trabajo", "Reciente", "Marcado", "Plantillas"];
 
   return (
     <div className="flex flex-row gap-0 w-100 border-b border-gray-600 justify-between text-sm px-6">
       <div className="flex flex-row justify-start items-center p-2 gap-2">
-        <TrelloLogo className="w-4 h-4" />
-        <div className="text-xl font-bold">Trello</div>
+        <div
+          className="flex flex-row justify-start items-center p-2 gap-2 hover:bg-gray-600 cursor-pointer rounded"
+          onClick={() => navigate("/espacio-trabajo")}
+        >
+          <TrelloLogo className="w-4 h-4" />
+          <div className="text-xl font-bold">Trello</div>
+        </div>
         {items.map((item) => (
           <NavItem key={item} label={item} />
         ))}

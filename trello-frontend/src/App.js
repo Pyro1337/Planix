@@ -9,7 +9,7 @@ import { ReduxRouter } from "@lagunovsky/redux-react-router";
 import { ToastContainer } from "react-toastify";
 import { tableroRoutes } from "./modules/tablero/handlers/routes";
 
-const routes = [...authRoutes, ...tableroRoutes];
+const routes = [...authRoutes];
 
 function App() {
   return (

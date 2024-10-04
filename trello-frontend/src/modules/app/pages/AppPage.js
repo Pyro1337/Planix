@@ -8,7 +8,7 @@ export function AppPage() {
       {/* {!!showSidebar && <Sidebar></Sidebar>} */}
       <div className="flex flex-col w-full overflow-auto">
         <ScrollToTop>
-          {/* <AppBar /> */}
+          <AppBar />
           <div className="px-8">
             <RootRoutes />
           </div>
