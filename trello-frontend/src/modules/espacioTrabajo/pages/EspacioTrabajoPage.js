@@ -22,7 +22,7 @@ export function EspacioTrabajoPage() {
     }
   };
   return (
-    <div className="form flex justify-center py-2 px-8 -mx-8">
+    <div className="form flex justify-center w-full py-2 px-8 -mx-8">
       <div className="mt-4 w-3/5">
         {/* <div className="flex flex-col w-1/4 border"></div>
         <div className="flex flex-col w-3/4 border">Derecha</div> */}

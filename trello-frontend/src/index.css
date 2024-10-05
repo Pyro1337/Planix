@@ -6,13 +6,13 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #1D2125; /* Cambia este color al que prefieras */
+  background-color: #1d2125;
   margin: 0;
-  font-family: "Gill Sans", sans-serif; /* O cualquier fuente que prefieras */
-  color: #B6C2CF; /* Cambia el color de texto si es necesario */
+  font-family: "Gill Sans", sans-serif;
+  color: #b6c2cf; /* Cambia el color de texto */
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }

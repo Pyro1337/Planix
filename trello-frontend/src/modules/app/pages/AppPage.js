@@ -8,8 +8,8 @@ export function AppPage() {
       {/* {!!showSidebar && <Sidebar></Sidebar>} */}
       <div className="flex flex-col w-full overflow-auto">
         <ScrollToTop>
-          <AppBar />
-          <div className="px-8">
+          <div className="flex flex-col h-screen">
+            <AppBar />
             <RootRoutes />
           </div>
         </ScrollToTop>

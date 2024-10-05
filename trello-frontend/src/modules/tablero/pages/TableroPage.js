@@ -20,27 +20,26 @@ const initialColumns = {
 };
 
 export function TableroPage() {
-  const tableros = useSelector((state) => state.tablero.tableros);
   const [columns, setColumns] = useState(initialColumns);
-  const [createTablero, setCreateTablero] = useState(false);
-  const [tableroName, setTableroName] = useState("");
+  const [createLista, setCreateLista] = useState(false);
+  const [listaName, setListaName] = useState("");
 
   const onChange = (field) => (e) => {
-    if (field === "tableroName") {
-      setTableroName(e.target.value);
+    if (field === "listaName") {
+      setListaName(e.target.value);
     }
   };
 
   const addNewList = () => {
     setColumns({
       ...columns,
-      [tableroName.replace(" ", "")]: {
-        name: tableroName,
+      [listaName.replace(" ", "")]: {
+        name: listaName,
         items: [],
       },
     });
-    setCreateTablero(false);
-    setTableroName("");
+    setCreateLista(false);
+    setListaName("");
   };
 
   const onDragEnd = (result) => {
@@ -70,7 +69,7 @@ export function TableroPage() {
 
   return (
     <TableroLayout>
-      <div className="w-full min-h-screen p-4 bg-[#8F3F65]">
+      <div className="w-full h-full p-4 bg-[#8F3F65] overflow-auto">
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-row gap-4">
             {Object.entries(columns).map(([columnId, column], index) => (
@@ -89,7 +88,7 @@ export function TableroPage() {
                         Cantidad máxima de tareas
                       </span>
                     )}
-                    <div className="">
+                    <div>
                       {column.items.map((item, index) => (
                         <Draggable key={item} draggableId={item} index={index}>
                           {(provided, snapshot) => (
@@ -118,22 +117,22 @@ export function TableroPage() {
                 )}
               </Droppable>
             ))}
-            {!createTablero && (
+            {!createLista && (
               <div
                 className="flex flex-row items-center font-bold text-white text-sm rounded-lg p-2 bg-[#AA6D8B] shadow-lg w-[300px] h-full cursor-pointer hover:bg-[#9c627f]"
-                onClick={() => setCreateTablero(true)}
+                onClick={() => setCreateLista(true)}
               >
                 <Plus className="w-6 h-6" />
                 Añade otra lista
               </div>
             )}
-            {createTablero && (
+            {createLista && (
               <div className="text-sm rounded-lg p-2 bg-black shadow-lg w-[300px] h-full">
                 <input
                   className="bg-custom-body p-1 rounded w-full"
                   placeholder="Introduce el nombre de la lista"
                   type="text"
-                  onChange={onChange("tableroName")}
+                  onChange={onChange("listaName")}
                 />
                 <div className="flex flex-row items-center gap-2 mt-2">
                   <button
@@ -144,7 +143,7 @@ export function TableroPage() {
                   </button>
                   <X
                     className="w-6 h-6 hover:bg-gray-500 cursor-pointer rounded"
-                    onClick={() => setCreateTablero(false)}
+                    onClick={() => setCreateLista(false)}
                   />
                 </div>
               </div>

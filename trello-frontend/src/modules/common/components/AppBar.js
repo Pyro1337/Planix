@@ -1,6 +1,7 @@
 import { CaretDown, Bell, InfoCircle } from "react-bootstrap-icons";
 import { ReactComponent as TrelloLogo } from "../../common/icons/trello-icon.svg";
 import { useNavigate } from "react-router-dom";
+import Dropdown from "./Dropdown";
 
 const NavItem = ({ label }) => (
   <div className="flex flex-row justify-center items-center gap-1 rounded-sm px-3 py-2 hover:bg-gray-600 cursor-pointer">
@@ -11,7 +12,25 @@ const NavItem = ({ label }) => (
 
 export function AppBar() {
   const navigate = useNavigate();
-  const items = ["Espacios de trabajo", "Reciente", "Marcado", "Plantillas"];
+  const items = [
+    {
+      label: "Espacios de trabajo",
+      options: [],
+    },
+    { label: "Marcado", options: [] },
+    { label: "Plantillas", options: [] },
+    {
+      label: "Opciones",
+      options: [
+        {
+          label: "Crear usuario",
+          action: () => {
+            console.log("Opción 1");
+          },
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="flex flex-row gap-0 w-100 border-b border-gray-600 justify-between text-sm px-6">
@@ -24,7 +43,7 @@ export function AppBar() {
           <div className="text-xl font-bold">Trello</div>
         </div>
         {items.map((item) => (
-          <NavItem key={item} label={item} />
+          <Dropdown label={item.label} options={item.options} />
         ))}
         <button className="bg-blue-500 text-black rounded px-3 py-2 hover:bg-blue-400">
           Crear
