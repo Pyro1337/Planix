@@ -25,7 +25,9 @@ export function MiembrosPage() {
               cualquier momento. Las invitaciones pendientes cuentan para el
               límite de 10 colaboradores.
             </p>
-            <button className="w-1/4">Invitar mediante enlace</button>
+            <div className="flex justify-center items-center w-1/4 border border-green-500">
+              <button className="border border-red-500">Invitar mediante enlace</button>
+            </div>
           </div>
         </div>
       </div>
