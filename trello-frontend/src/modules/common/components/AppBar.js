@@ -25,7 +25,7 @@ export function AppBar() {
         {
           label: "Crear usuario",
           action: () => {
-            console.log("Opción 1");
+            navigate("/miembros");
           },
         },
       ],
