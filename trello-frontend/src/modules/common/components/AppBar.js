@@ -1,21 +1,32 @@
-import { CaretDown, Bell, InfoCircle } from "react-bootstrap-icons";
+import { CaretDown, Bell, InfoCircle, RSquare, PersonPlusFill } from "react-bootstrap-icons";
 import { ReactComponent as TrelloLogo } from "../../common/icons/trello-icon.svg";
 import { useNavigate } from "react-router-dom";
 import Dropdown from "./Dropdown";
-
-const NavItem = ({ label }) => (
-  <div className="flex flex-row justify-center items-center gap-1 rounded-sm px-3 py-2 hover:bg-gray-600 cursor-pointer">
-    {label}
-    <CaretDown />
-  </div>
-);
+import { Description, Diversity3 } from "@mui/icons-material";
 
 export function AppBar() {
   const navigate = useNavigate();
   const items = [
     {
       label: "Espacios de trabajo",
-      options: [],
+      options: [
+        {
+          label: "Crear Espacio de trabajo",
+          action: () => {
+            navigate("/crear-espacio-trabajo");
+          },
+          icon: <Diversity3 />, // Icono de creación
+          description:
+            "Un Espacio de trabajo es un conjunto de tableros y personas. Utilízalo para organizar tu empresa, tu proyecto paralelo y tus planes con familiares o amigos.", // Descripción debajo
+        },
+        {
+          label: "Espacios de trabajo de Trello",
+          action: () => {
+            navigate("/mis-espacios-trabajo");
+          },
+          icon: <RSquare />, // Icono del espacio de trabajo
+        },
+      ],
     },
     { label: "Marcado", options: [] },
     { label: "Plantillas", options: [] },
@@ -27,6 +38,7 @@ export function AppBar() {
           action: () => {
             navigate("/miembros");
           },
+          icon: <PersonPlusFill />, // Icono del usuario
         },
       ],
     },
@@ -42,8 +54,8 @@ export function AppBar() {
           <TrelloLogo className="w-4 h-4" />
           <div className="text-xl font-bold">Trello</div>
         </div>
-        {items.map((item) => (
-          <Dropdown label={item.label} options={item.options} />
+        {items.map((item, index) => (
+          <Dropdown key={index} label={item.label} options={item.options} />
         ))}
         <button className="bg-blue-500 text-black rounded px-3 py-2 hover:bg-blue-400">
           Crear
