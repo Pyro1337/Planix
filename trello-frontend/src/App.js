@@ -7,7 +7,6 @@ import { Route, Routes } from "react-router-dom";
 import { browserHistory, rootStore } from "./root/rootStore";
 import { ReduxRouter } from "@lagunovsky/redux-react-router";
 import { ToastContainer } from "react-toastify";
-import { tableroRoutes } from "./modules/tablero/handlers/routes";
 
 const routes = [...authRoutes];
 
