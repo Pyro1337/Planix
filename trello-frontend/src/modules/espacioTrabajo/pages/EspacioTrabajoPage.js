@@ -2,11 +2,15 @@ import { useState } from "react";
 import { Card } from "../components/Card";
 import { X } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const initialTableros = ["Tablero 1", "Tablero 2", "Tablero 3"];
 
 export function EspacioTrabajoPage() {
   const navigate = useNavigate();
+  const espaciosTrabajos = useSelector(
+    (state) => state.espacioTrabajo.espaciosTrabajos
+  );
   const [tableros, setTableros] = useState(initialTableros);
   const [createTablero, setCreateTablero] = useState(false);
   const [tableroName, setTableroName] = useState("");
@@ -22,14 +26,34 @@ export function EspacioTrabajoPage() {
     }
   };
   return (
-    <div className="form flex justify-center w-full py-2 px-8 -mx-8">
+    <div className="form flex flex-col justify-center w-full p-6">
+      <div className="flex items-center p-4 bg-gray-900 text-white rounded-lg">
+        {/* Icono e información del espacio de trabajo */}
+        <div className="flex items-center space-x-4">
+          {/* Icono del espacio de trabajo */}
+          <div
+            className={`w-12 h-12 bg-gradient-to-r ${espaciosTrabajos[0].colorIni} ${espaciosTrabajos[0].colorFin} flex items-center justify-center rounded-lg text-2xl font-bold`}
+          >
+            {espaciosTrabajos[0].nombre.charAt(0)}
+          </div>
+          {/* Información */}
+          <div>
+            <h1 className="text-lg font-semibold">
+              {espaciosTrabajos[0].nombre}
+            </h1>
+            <p className="text-gray-400 flex items-center">
+              <span className="mr-2">🔒 Privada</span>
+            </p>
+          </div>
+        </div>
+      </div>
       <div className="mt-4 w-3/5">
         {/* <div className="flex flex-col w-1/4 border"></div>
         <div className="flex flex-col w-3/4 border">Derecha</div> */}
         <h1 className="text-base font-bold mb-2">TUS TABLEROS</h1>
         <div className="flex flex-row gap-2">
           {tableros.map((tablero) => (
-            <Card nombre={tablero} onClick={() => navigate("/tableros")}/>
+            <Card nombre={tablero} onClick={() => navigate("/tableros")} />
           ))}
           {!createTablero && (
             <div

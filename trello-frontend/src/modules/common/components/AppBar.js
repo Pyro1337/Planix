@@ -51,19 +51,12 @@ export function AppBar() {
     },
   ];
 
-  const NavItem = ({ label }) => (
-    <div className="flex flex-row justify-center items-center gap-1 rounded-sm px-3 py-2 hover:bg-gray-600 cursor-pointer">
-      {label}
-      <CaretDown />
-    </div>
-  );
-
   return (
     <div className="flex flex-row gap-0 w-100 border-b border-gray-600 justify-between text-sm px-6">
       <div className="flex flex-row justify-start items-center p-2 gap-2">
         <div
           className="flex flex-row justify-start items-center p-2 gap-2 hover:bg-gray-600 cursor-pointer rounded"
-          onClick={() => navigate("/espacio-trabajo")}
+          onClick={() => navigate("/mis-espacios-trabajo")}
         >
           <TrelloLogo className="w-4 h-4" />
           <div className="text-xl font-bold">Trello</div>
