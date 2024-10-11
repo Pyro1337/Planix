@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const espacioTrabajoSlice = createSlice({
-  name: "espacioTrabajo",
+const miembroSlice = createSlice({
+  name: "miembro",
   initialState: {
     espaciosTrabajos: [
       {
@@ -22,17 +22,26 @@ const espacioTrabajoSlice = createSlice({
         colorIni: "from-yellow-500",
         colorFin: "to-pink-500",
       },
+      {
+        id: 4,
+        nombre: "Espacio de trabajo 4",
+        colorIni: "from-purple-500",
+        colorFin: "to-teal-500",
+      },
+      {
+        id: 5,
+        nombre: "Espacio de trabajo 5",
+        colorIni: "from-gray-500",
+        colorFin: "to-gray-700",
+      },
     ],
   },
   reducers: {
     setEspaciosTrabajos: (state, { payload = [] }) => {
       state.espaciosTrabajos = payload;
     },
-    addEspacioTrabajo: (state, { payload }) => {
-      state.espaciosTrabajos.push(payload);
-    },
   },
 });
 
-export const espacioTrabajoActions = espacioTrabajoSlice.actions;
-export const espacioTrabajoReducer = espacioTrabajoSlice.reducer;
+export const miembroActions = miembroSlice.actions;
+export const miembroReducer = miembroSlice.reducer;
