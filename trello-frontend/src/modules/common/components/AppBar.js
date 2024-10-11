@@ -2,6 +2,7 @@ import { CaretDown, Bell, InfoCircle } from "react-bootstrap-icons";
 import { ReactComponent as TrelloLogo } from "../../common/icons/trello-icon.svg";
 import { useNavigate } from "react-router-dom";
 import Dropdown from "./Dropdown";
+import { InputText } from "./InputText";
 
 const NavItem = ({ label }) => (
   <div className="flex flex-row justify-center items-center gap-1 rounded-sm px-3 py-2 hover:bg-gray-600 cursor-pointer">
@@ -50,12 +51,7 @@ export function AppBar() {
         </button>
       </div>
       <div className="flex flex-row justify-end items-center p-2 gap-4">
-        <input
-          type="text"
-          className="border border-gray-600 px-2 py-1 rounded bg-custom-body"
-          placeholder="Buscar..."
-          aria-label="Buscar"
-        />
+        <InputText />
         <Bell className="w-4 h-4 cursor-pointer" />
         <InfoCircle className="w-4 h-4 cursor-pointer" />
         <div className="flex justify-center items-center w-5 h-5 rounded-full bg-orange-600 text-white">
