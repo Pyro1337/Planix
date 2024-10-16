@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
-import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardHeading,EyeFill, PlusCircle, JustifyLeft, ListTask } from "react-bootstrap-icons";
+import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardHeading,EyeFill, PlusCircle, JustifyLeft, ListTask, PersonFillAdd, PersonFill, TagFill} from "react-bootstrap-icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { TableroLayout } from "../components/TableroLayout";
 
@@ -47,12 +47,25 @@ const initialColumns = {
 };
 
 export function TableroPage() {
+  const [follow, setFollow] = useState(false); //Estado para el seguir y siguiendo.
+  const [showDetails, setShowDetails] = useState(false); //Estado para boton "Mostrar Detalles"
   const [columns, setColumns] = useState(initialColumns);
   const [createLista, setCreateLista] = useState(false);
   const [listaName, setListaName] = useState("");
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+
+
+  //Estado para boton seguir y siguiendo
+  const toggleFollow = () => {
+    setFollow(!follow); //cambiar de true a false
+  }
+
+  // Estado boton "Mostrar Detalles"
+  const toggleDetails = () =>{
+    setShowDetails(!showDetails);//Cambiar el estado entre true o false
+  }
 
   const onChange = (field) => (e) => {
     if (field === "listaName") {
@@ -230,14 +243,18 @@ export function TableroPage() {
             )}
             {/* Miembros y notificaciones */}
             <div className="flex justify-between items-center mb-4 mt-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center">
                  IS
                 </div>
                 <PlusCircle className="mr-2 text-gray-900" size={25} />
               </div>
-              <div className="flex items-center gap-2">
-                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 hover:bg-gray-200 flex     items-center"><EyeFill  className="mr-2 bg-gray-100" size={20}/>Seguir
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={toggleFollow} //Evento que ejecuta la funcion para alternar de seguir a siguiendo.
+                  className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center ">
+                    <EyeFill  className="mr-2 bg-gray-100" size={20}/>
+                    {follow ? "Siguiendo ✔" : "Seguir" } {/*Texto dinamico entre siguiendo y seguir al estar True o False*/}
                 </button>
               </div>
             </div>
@@ -254,8 +271,15 @@ export function TableroPage() {
             {/*Actividad*/}
             <div className="mb-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-700 flex items-center"> <ListTask className="mr-2" size={20} />Actividad</span>
-                  <button className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1  hover:bg-gray-200">Mostrar detalles</button>
+                <span className="text-gray-700 flex items-center"> <ListTask className="mr-2" size={20} />Actividad
+                </span>
+                <button
+                  onClick={toggleDetails}//Evento que muestra/oculta los detalles
+                  className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1  hover:bg-gray-200"
+                >
+                  {/*Por defecto esta oculto, y pasa a mostrar detalles*/}
+                  {showDetails ? "Ocultar detalles" : "Mostrar detalles"} 
+                 </button>
               </div>
                 <input
                   className="w-full p-2 mt-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
@@ -264,21 +288,48 @@ export function TableroPage() {
                 />
               </div>
             </div>
-            {/* Detalles ocultos de la tarea*/}
-            <div className="flex items-center gap-4">
-              
-              {/* Avatar o iniciales */}
-              <div className="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center">
-                EL
+            {/* Detalles ocultos de la tarea que se van a mostrar al clickear en Mostrar detalles*/}
+            {showDetails && (
+              <div className="flex items-center gap-4">
+                {/* Avatar o iniciales */}
+                <div className="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center">
+                  EL
+                </div>
+
+                {/* Contenido del texto */}
+                <div>
+                  <p className="font-bold text-gray-900">Eric Mathias Amarilla Leguizamon</p>
+                  <p className="text-gray-900">ha añadido esta tarjeta a la lista de tareas 1 sept 2024, 14:43
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/*Botones de la derecha*/}
+            <div className="block mb-4 mt-4">
+              {/*Boton de unirse*/}
+              <div className="flex items-center gap-1">
+                  <button 
+                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200">
+                      <PersonFillAdd  className="mr-2 bg-gray-100" size={20}/>Unirse  
+                  </button>
               </div>
 
-              {/* Contenido del texto */}
-              <div>
-                <p className="font-bold text-gray-900">Eric Mathias Amarilla Leguizamon</p>
-                <p className="text-gray-900">ha añadido esta tarjeta a la lista de tareas 1 sept 2024, 14:43
-                </p>
-
+              {/*Boton de Miembros*/}
+              <div className="flex items-center gap-1">
+                  <button 
+                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200">
+                      <PersonFill  className="mr-2 bg-gray-100" size={20}/>Miembros  
+                  </button>
               </div>
+              {/*Boton de Etiquetas*/}
+              <div className="flex items-center gap-1">
+                  <button 
+                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200">
+                      <TagFill className="mr-2 bg-gray-100" size={20}/>Etiquetas  
+                  </button>
+              </div>              
+
             </div>
           </Modal>
       </div>
