@@ -1,10 +1,37 @@
-import { useSelector } from "react-redux";
-import { TableroLayout } from "../components/TableroLayout";
 import React, { useState } from "react";
+import Modal from "react-modal";
+import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardHeading,EyeFill, PlusCircle, JustifyLeft, ListTask } from "react-bootstrap-icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import { Plus, X } from "react-bootstrap-icons";
+import { TableroLayout } from "../components/TableroLayout";
 
+// Ajusta los estilos del modal para hacerlo más blanco y el fondo transparente
+const customModalStyles = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+    width: "700px",
+    backgroundColor: "#fff", // Hacer el fondo del modal completamente blanco
+    borderRadius: "10px",
+    padding: "20px",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+  },
+  overlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Hacer el fondo detrás del modal transparente
+  },
+};
+
+Modal.setAppElement("#root");
+
+// Definir las columnas iniciales
 const initialColumns = {
+  atrasada: {
+    name: "Atrasada",
+    items: ["Tarea 1", "Tarea 2"],
+  },
   pendiente: {
     name: "Pendiente",
     items: ["Tarea 1", "Tarea 2"],
@@ -23,6 +50,9 @@ export function TableroPage() {
   const [columns, setColumns] = useState(initialColumns);
   const [createLista, setCreateLista] = useState(false);
   const [listaName, setListaName] = useState("");
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedColumn, setSelectedColumn] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const onChange = (field) => (e) => {
     if (field === "listaName") {
@@ -67,6 +97,18 @@ export function TableroPage() {
     });
   };
 
+  const openModal = (card, columnId) => {
+    setSelectedCard(card);
+    setSelectedColumn(columnId);
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setSelectedCard(null);
+    setSelectedColumn(null);
+  };
+
   return (
     <TableroLayout>
       <div className="w-full h-full p-4 bg-[#8F3F65] overflow-auto">
@@ -79,10 +121,24 @@ export function TableroPage() {
                     {...provided.droppableProps}
                     ref={provided.innerRef}
                     className={`rounded-lg p-4 shadow-lg bg-black w-[300px] h-full ${
-                      column.items.length > 1 ? "border-2 border-red-500" : ""
+                      columnId === "atrasada" ? "border-4 border-red-600" : ""
                     }`}
                   >
-                    <h2 className="font-bold text-md mb-2">{column.name}</h2>
+                    <h2 className="font-bold text-md mb-2 flex items-center">
+                      {column.name}
+                      {columnId === "atrasada" && (
+                        <AlarmFill className="ml-2 text-red-500" size={20} />
+                      )}
+                      {columnId === "pendiente" && (
+                        <Hourglass className="ml-2 text-gray-400" size={20} />
+                      )}
+                      {columnId === "enProgreso" && (
+                        <HourglassBottom className="ml-2 text-gray-400" size={20} />
+                      )}
+                      {columnId === "completado" && (
+                        <CheckCircleFill className="ml-2 text-green-600" size={20} />
+                      )}
+                    </h2>
                     {column.items.length > 1 && (
                       <span className="text-sm text-red-500">
                         Cantidad máxima de tareas
@@ -96,11 +152,12 @@ export function TableroPage() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`p-2 mb-2 rounded text-sm ${
+                              className={`p-2 mb-2 rounded text-sm cursor-pointer ${
                                 snapshot.isDragging
                                   ? "bg-green-300"
                                   : "bg-custom-body"
                               } border border-transparent hover:border-white`}
+                              onClick={() => openModal(item, columnId)}
                             >
                               {item}
                             </div>
@@ -150,6 +207,80 @@ export function TableroPage() {
             )}
           </div>
         </DragDropContext>
+
+        {/* Modal */}
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
+          style={customModalStyles}
+          contentLabel="Detalles de la Tarjeta"
+        >
+          <div className="flex flex-col">
+            <button className="self-end" onClick={closeModal}>
+              <X className="w-6 h-6" />
+            </button>
+            {selectedCard && (
+              <h2 className="font-bold text-lg mb-4 flex items-center text-gray-900">
+                <CardHeading className="mr-2" size={20} />
+                {selectedCard}
+              </h2>
+            )}
+            {selectedColumn && columns[selectedColumn] && (
+              <p className="font-bold text-gray-900">En la lista de {columns[selectedColumn].name}</p>
+            )}
+            {/* Miembros y notificaciones */}
+            <div className="flex justify-between items-center mb-4 mt-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center">
+                 IS
+                </div>
+                <PlusCircle className="mr-2 text-gray-900" size={25} />
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 hover:bg-gray-200 flex     items-center"><EyeFill  className="mr-2 bg-gray-100" size={20}/>Seguir
+                </button>
+              </div>
+            </div>
+
+            {/* Descripcion */}
+            <div className="mb-4">
+              <label className=" text-gray-700 font-bold mb-2 flex items-center"><JustifyLeft className="mr-2" size={20} />Descripcion</label>
+              <textarea
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                placeholder="Añadir una descripción mas detallada..."
+                rows="3"
+              ></textarea>
+            </div>
+            {/*Actividad*/}
+            <div className="mb-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700 flex items-center"> <ListTask className="mr-2" size={20} />Actividad</span>
+                  <button className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1  hover:bg-gray-200">Mostrar detalles</button>
+              </div>
+                <input
+                  className="w-full p-2 mt-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  type="text"
+                  placeholder="Escribe un comentario..."
+                />
+              </div>
+            </div>
+            {/* Detalles ocultos de la tarea*/}
+            <div className="flex items-center gap-4">
+              
+              {/* Avatar o iniciales */}
+              <div className="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center">
+                EL
+              </div>
+
+              {/* Contenido del texto */}
+              <div>
+                <p className="font-bold text-gray-900">Eric Mathias Amarilla Leguizamon</p>
+                <p className="text-gray-900">ha añadido esta tarjeta a la lista de tareas 1 sept 2024, 14:43
+                </p>
+
+              </div>
+            </div>
+          </Modal>
       </div>
     </TableroLayout>
   );
