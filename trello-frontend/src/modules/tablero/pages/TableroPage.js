@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
-import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardHeading,EyeFill, PlusCircle, JustifyLeft, ListTask, PersonFillAdd, PersonFill, TagFill, CardChecklist, Clock, Paperclip, WindowFullscreen, Back, ArrowRight, Copy, WindowStack, Archive, Share, XLg} from "react-bootstrap-icons";
+import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardHeading,EyeFill, PlusCircle, JustifyLeft, ListTask, PersonFillAdd, PersonFill, TagFill, CardChecklist, Clock, Paperclip, WindowFullscreen, Back, ArrowRight, Copy, WindowStack, Archive, Share, XLg, Trash, FunnelFill} from "react-bootstrap-icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { TableroLayout } from "../components/TableroLayout";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { Alert } from "@material-tailwind/react";
 
 // Ajusta los estilos del modal para hacerlo más blanco y el fondo transparente
 const customModalStyles = {
@@ -49,12 +52,18 @@ const initialColumns = {
 export function TableroPage() {
   const [follow, setFollow] = useState(false); // Estado para el seguir y siguiendo.
   const [showDetails, setShowDetails] = useState(false); // Estado para el botón "Mostrar Detalles"
+  const [showDelete, setShowDelete] = useState(false); // Estado para el boton Archivar -> Eliminar
   const [columns, setColumns] = useState(initialColumns);
   const [createLista, setCreateLista] = useState(false);
+  const [showFilterInput, setShowFilterInput] = useState(false);
   const [listaName, setListaName] = useState(""); // Estado para el nombre de la nueva lista
   const [newCardName, setNewCardName] = useState(""); // Estado para el nombre de la nueva tarjeta
   const [selectedCard, setSelectedCard] = useState(null);
+  const [filter, setFilter] = useState(""); // Estado para el filtro
   const [selectedColumn, setSelectedColumn] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);//estado para las fechas
+  const [originalColumn, setOriginalColumn] = useState(null); // Almacena la columna original de la tarjeta
+  const [showDatePicker, setShowDatePicker] = useState(false); // Estado para mostrar/ocultar el DatePicker
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState({}); // Control de estado para las tarjetas
 
@@ -68,6 +77,15 @@ export function TableroPage() {
   const toggleDetails = () => {
     setShowDetails(!showDetails); // Cambiar el estado entre true o false
   }
+
+  //Estado botón "Archivar/Eliminar"
+  const toggleDelete = () => {
+    if(showDelete){
+      deleteCard();
+    }else{
+      setShowDelete(true);
+    }
+  };
 
   const onChange = (field) => (e) => {
     if (field === "listaName") {
@@ -140,13 +158,89 @@ export function TableroPage() {
     setSelectedCard(card);
     setSelectedColumn(columnId);
     setModalIsOpen(true);
+    setShowDelete(false);//seteamos que al abrir el comportamiento se resetee de archivar/eliminar y de mostrar detalles
+    setShowDetails(false);
   };
 
   const closeModal = () => {
     setModalIsOpen(false);
     setSelectedCard(null);
     setSelectedColumn(null);
+    setShowDelete(false);//seteamos que al cerrar el comportamiento se resetee de archivar/eliminar y de mostrar detalles
+    setShowDetails(false);
   };
+
+  //Funciona para eliminar la tarjeta
+  const deleteCard = () => {
+    const updatedColumn = {
+      ...columns[selectedColumn],
+      items: columns[selectedColumn].items.filter((item) => item !== selectedCard),
+    };
+  
+    setColumns({
+      ...columns,
+      [selectedColumn]: updatedColumn,
+    });
+
+    // Cerrar el modal después de eliminar la tarjeta
+    closeModal();
+  };
+  // Función para eliminar una lista
+  const deleteList = (columnId) => {
+    const updatedColumns = { ...columns };
+    delete updatedColumns[columnId]; // Eliminar la columna por su id
+    setColumns(updatedColumns); // Actualizar el estado con las columnas restantes
+  };
+
+  //Funcion para las fechas
+  const handleDateChange = (date) => {
+    setSelectedDate(date); // Almacena la fecha seleccionada
+  
+    const currentDate = new Date(); // Fecha actual
+  
+    if (date < currentDate) {
+      // Si la fecha seleccionada es menor que la actual, mover a "Atrasada"
+      // Guardar la columna original solo si la tarjeta no estaba previamente en "Atrasada"
+      if (selectedColumn !== "atrasada") {
+        setOriginalColumn(selectedColumn); // Guardar la columna original antes de moverla
+      }
+  
+      const updatedColumn = {
+        ...columns["atrasada"],
+        items: [...columns["atrasada"].items, selectedCard], // Añadir la tarjeta a la columna "Atrasada"
+      };
+  
+      setColumns({
+        ...columns,
+        [selectedColumn]: {
+          ...columns[selectedColumn],
+          items: columns[selectedColumn].items.filter((item) => item !== selectedCard), // Eliminar la tarjeta de su columna actual
+        },
+        atrasada: updatedColumn,
+      });
+  
+    } else if (originalColumn && selectedColumn === "atrasada") {
+      // Si la fecha seleccionada es mayor y la tarjeta está en "Atrasada", restaurarla a la columna original
+      const updatedColumn = {
+        ...columns[originalColumn],
+        items: [...columns[originalColumn].items, selectedCard], // Mover la tarjeta de vuelta a su columna original
+      };
+  
+      setColumns({
+        ...columns,
+        atrasada: {
+          ...columns["atrasada"],
+          items: columns["atrasada"].items.filter((item) => item !== selectedCard), // Eliminar la tarjeta de "Atrasada"
+        },
+        [originalColumn]: updatedColumn,
+      });
+  
+      setOriginalColumn(null); // Limpiar la columna original después de mover la tarjeta de vuelta
+    }
+  
+    closeModal(); // Cerrar el modal después de la acción
+  };
+  
 
   return (
     <TableroLayout>
@@ -163,10 +257,30 @@ export function TableroPage() {
                       columnId === "atrasada" ? "border-4 border-red-600" : ""
                     }`}
                   >
+                  <div className="flex justify-between">
                     <h2 className="font-bold text-md mb-2 flex items-center">
                       {column.name}
                       {columnId === "atrasada" && (
+                      <>
                         <AlarmFill className="ml-2 text-red-500" size={20} />
+                        <span
+                        style={{
+                          animation: "blinkingText 1.5s infinite",
+                          color: "red",
+                        }}
+                      >
+                        ¡Atención!
+                      </span>
+                      <style>
+                        {`
+                          @keyframes blinkingText {
+                            0% { color: red; }
+                            50% { color: black; }
+                            100% { color: red; }
+                          }
+                        `}
+                      </style>
+                    </>
                       )}
                       {columnId === "pendiente" && (
                         <Hourglass className="ml-2 text-gray-400" size={20} />
@@ -178,13 +292,21 @@ export function TableroPage() {
                         <CheckCircleFill className="ml-2 text-green-600" size={20} />
                       )}
                     </h2>
+                    {/* Botón de eliminar lista */}
+                    <button
+                      onClick={() => deleteList(columnId)} // Evento para eliminar la lista
+                      className="bg-black-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
                     {column.items.length > 1 && (
                       <span className="text-sm text-red-500">
                         Cantidad máxima de tareas
                       </span>
                     )}
                     <div>
-                      {column.items.map((item, index) => (
+                      {column.items.filter((item) => item.toLowerCase().includes(filter.toLowerCase())).map((item, index) => (
                         <Draggable key={item} draggableId={item} index={index}>
                           {(provided, snapshot) => (
                             <div
@@ -243,13 +365,34 @@ export function TableroPage() {
               </Droppable>
             ))}
             {!createLista && (
+            <div className="flex items-center gap-4">
               <div
-                className="flex flex-row items-center font-bold text-white text-sm rounded-lg p-2 bg-[#AA6D8B] shadow-lg w-[300px] h-full cursor-pointer hover:bg-[#9c627f]"
+                className="flex flex-row items-center font-bold text-white text-sm rounded-lg p-2 bg-[#AA6D8B] shadow-lg w-[300px] cursor-pointer hover:bg-[#9c627f]"
                 onClick={() => setCreateLista(true)}
               >
                 <Plus className="w-6 h-6" />
                 Añade otra lista
               </div>
+                  {/* Botón de Filtros */}
+              <div
+                className="flex flex-row items-center font-bold text-white text-sm rounded-lg p-2 bg-[#AA6D8B] shadow-lg cursor-pointer hover:bg-[#9c627f]"
+                onClick={() => setShowFilterInput(!showFilterInput)}
+              >
+                <FunnelFill className="w-6 h-6" />
+                <span className="ml-2">Filtros</span>
+              </div>
+               {/* Input para buscar */}
+               { showFilterInput && (
+                <input
+                  type="text"
+                  className="rounded p-3 text-black w-72 font-bold"
+                  placeholder="Buscar por nombre de lista"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                />
+               )}
+              
+            </div>
             )}
             {createLista && (
               <div className="text-sm rounded-lg p-2 bg-black shadow-lg w-[300px] h-full">
@@ -313,7 +456,7 @@ export function TableroPage() {
                     <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center">
                       IS
                     </div>
-                    <PlusCircle className="mr-2 text-gray-900" size={25} />
+                    <PlusCircle className="mr-2 text-gray-900 hover:cursor-pointer" size={25} />
                   </div>
                   <div className="flex items-center gap-1">
                     <button onClick={toggleFollow} className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center">
@@ -391,10 +534,21 @@ export function TableroPage() {
                   <CardChecklist className="mr-2 bg-gray-100" size={18} /> Checklist
                 </button>
 
-                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                <button
+                  className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold"
+                  onClick={() => setShowDatePicker(!showDatePicker)} // Mostrar u ocultar el DatePicker
+                >
                   <Clock className="mr-2 bg-gray-100" size={18} /> Fechas
                 </button>
 
+                {showDatePicker && (
+                  <DatePicker
+                    selected={selectedDate}
+                    onChange={(date) => handleDateChange(date)} // Aquí manejamos la selección de fecha
+                    dateFormat="dd/MM/yyyy"
+                    className="mt-2 p-2 rounded"
+                  />
+                )}
                 <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
                   <Paperclip className="mr-2 bg-gray-100" size={18} /> Adjunto
                 </button>
@@ -432,10 +586,19 @@ export function TableroPage() {
                     <WindowStack className="mr-2 bg-gray-100" size={18} /> Crear plantilla
                   </button>
 
-                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
-                    <Archive className="mr-2 bg-gray-100" size={18} /> Archivar
+                  <button 
+                    onClick={toggleDelete} //Evento para cambiar entre archivar y eliminar.
+                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
+                    {showDelete ? (
+                      <>
+                        <Trash className="mr-2 bg-gray-100" size={18} /> Eliminar
+                      </>
+                    ) : (
+                      <>
+                        <Archive className="mr-2 bg-gray-100" size={18} /> Archivar
+                      </>
+                    )}
                   </button>
-
                   <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
                     <Share className="mr-2 bg-gray-100" size={18} /> Compartir
                   </button>
