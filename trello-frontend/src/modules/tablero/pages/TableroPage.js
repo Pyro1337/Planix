@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
-import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardHeading,EyeFill, PlusCircle, JustifyLeft, ListTask, PersonFillAdd, PersonFill, TagFill} from "react-bootstrap-icons";
+import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardHeading,EyeFill, PlusCircle, JustifyLeft, ListTask, PersonFillAdd, PersonFill, TagFill, CardChecklist, Clock, Paperclip, WindowFullscreen, Back, ArrowRight, Copy, WindowStack, Archive, Share, XLg} from "react-bootstrap-icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { TableroLayout } from "../components/TableroLayout";
 
@@ -30,49 +30,54 @@ Modal.setAppElement("#root");
 const initialColumns = {
   atrasada: {
     name: "Atrasada",
-    items: ["Tarea 1", "Tarea 2"],
+    items: ["Extras"],
   },
   pendiente: {
     name: "Pendiente",
-    items: ["Tarea 1", "Tarea 2"],
+    items: ["III. Métricas de Software", "Tarea 2"],
   },
   enProgreso: {
     name: "En Progreso",
-    items: ["Tarea 3"],
+    items: ["II. Buenas Prácticas en Codificación y Estándares"],
   },
   completado: {
     name: "Completado",
-    items: ["Tarea 4"],
+    items: ["Selección y Justificación de Modelo de Desarrollo","I. Fundamentos y Modelos de Desarrollo"],
   },
 };
 
 export function TableroPage() {
-  const [follow, setFollow] = useState(false); //Estado para el seguir y siguiendo.
-  const [showDetails, setShowDetails] = useState(false); //Estado para boton "Mostrar Detalles"
+  const [follow, setFollow] = useState(false); // Estado para el seguir y siguiendo.
+  const [showDetails, setShowDetails] = useState(false); // Estado para el botón "Mostrar Detalles"
   const [columns, setColumns] = useState(initialColumns);
   const [createLista, setCreateLista] = useState(false);
-  const [listaName, setListaName] = useState("");
+  const [listaName, setListaName] = useState(""); // Estado para el nombre de la nueva lista
+  const [newCardName, setNewCardName] = useState(""); // Estado para el nombre de la nueva tarjeta
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [isAddingCard, setIsAddingCard] = useState({}); // Control de estado para las tarjetas
 
 
-  //Estado para boton seguir y siguiendo
+  // Estado para el botón seguir y siguiendo
   const toggleFollow = () => {
-    setFollow(!follow); //cambiar de true a false
+    setFollow(!follow); // Cambiar de true a false
   }
 
-  // Estado boton "Mostrar Detalles"
-  const toggleDetails = () =>{
-    setShowDetails(!showDetails);//Cambiar el estado entre true o false
+  // Estado botón "Mostrar Detalles"
+  const toggleDetails = () => {
+    setShowDetails(!showDetails); // Cambiar el estado entre true o false
   }
 
   const onChange = (field) => (e) => {
     if (field === "listaName") {
       setListaName(e.target.value);
+    } else if (field === "newCardName") {
+      setNewCardName(e.target.value);
     }
   };
 
+  // Función para agregar una nueva lista
   const addNewList = () => {
     setColumns({
       ...columns,
@@ -83,6 +88,27 @@ export function TableroPage() {
     });
     setCreateLista(false);
     setListaName("");
+  };
+
+  // Función para agregar una nueva tarjeta
+  const addNewCard = (columnId) => {
+    if (newCardName.trim() === "") return; // Verifica que el nombre no esté vacío
+    const updatedColumn = {
+      ...columns[columnId],
+      items: [...columns[columnId].items, newCardName], // Añade la nueva tarjeta
+    };
+    setColumns({
+      ...columns,
+      [columnId]: updatedColumn,
+    });
+    setNewCardName(""); // Resetea el campo de nombre de tarjeta
+    setIsAddingCard({ ...isAddingCard, [columnId]: false }); // Ocultar campo después de agregar tarjeta
+  };
+
+  // Función para cancelar la creación de tarjeta
+  const cancelNewCard = (columnId) => {
+    setNewCardName("");
+    setIsAddingCard({ ...isAddingCard, [columnId]: false });
   };
 
   const onDragEnd = (result) => {
@@ -179,10 +205,39 @@ export function TableroPage() {
                       ))}
                       {provided.placeholder}
                     </div>
-                    <div className="flex flex-row bg-transparent items-center gap-2 hover:bg-custom-body cursor-pointer rounded-md p-1 font-bold">
-                      <Plus className="w-6 h-6" />
-                      <p className="text-sm">Agregar tarjeta</p>
-                    </div>
+                    {isAddingCard[columnId] ? (
+                      <div className="flex flex-col gap-2 mt-2">
+                        <input
+                          type="text"
+                          className="p-1 rounded bg-gray-700 text-white"
+                          placeholder="Nueva tarjeta"
+                          value={newCardName}
+                          onChange={onChange("newCardName")}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            className="bg-blue-500 p-2 text-white rounded hover:bg-blue-400"
+                            onClick={() => addNewCard(columnId)}
+                          >
+                            Añadir tarjeta
+                          </button>
+                          <button
+                            className="p-2 rounded hover:bg-gray-300"
+                            onClick={() => cancelNewCard(columnId)}
+                          >
+                            <XLg className="w-6 h-6" color="white" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="flex flex-row bg-transparent items-center gap-2 hover:bg-custom-body cursor-pointer rounded-md p-1 font-bold"
+                        onClick={() => setIsAddingCard({ ...isAddingCard, [columnId]: true })}
+                      >
+                        <Plus className="w-6 h-6" />
+                        <p className="text-sm">Añadir una tarjeta</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </Droppable>
@@ -228,110 +283,167 @@ export function TableroPage() {
           style={customModalStyles}
           contentLabel="Detalles de la Tarjeta"
         >
-          <div className="flex flex-col">
-            <button className="self-end" onClick={closeModal}>
-              <X className="w-6 h-6" />
+          <div className="relative">
+            <button
+              className="absolute top-2 right-2 hover:bg-gray-500 hover:rounded-full"
+              onClick={closeModal}
+            >
+              <X className="w-6 h-6 cursor-pointer" />
             </button>
-            {selectedCard && (
-              <h2 className="font-bold text-lg mb-4 flex items-center text-gray-900">
-                <CardHeading className="mr-2" size={20} />
-                {selectedCard}
-              </h2>
-            )}
-            {selectedColumn && columns[selectedColumn] && (
-              <p className="font-bold text-gray-900">En la lista de {columns[selectedColumn].name}</p>
-            )}
-            {/* Miembros y notificaciones */}
-            <div className="flex justify-between items-center mb-4 mt-4">
-              <div className="flex items-center gap-1">
-                <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center">
-                 IS
-                </div>
-                <PlusCircle className="mr-2 text-gray-900" size={25} />
-              </div>
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={toggleFollow} //Evento que ejecuta la funcion para alternar de seguir a siguiendo.
-                  className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center ">
-                    <EyeFill  className="mr-2 bg-gray-100" size={20}/>
-                    {follow ? "Siguiendo ✔" : "Seguir" } {/*Texto dinamico entre siguiendo y seguir al estar True o False*/}
-                </button>
-              </div>
-            </div>
 
-            {/* Descripcion */}
-            <div className="mb-4">
-              <label className=" text-gray-700 font-bold mb-2 flex items-center"><JustifyLeft className="mr-2" size={20} />Descripcion</label>
-              <textarea
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                placeholder="Añadir una descripción mas detallada..."
-                rows="3"
-              ></textarea>
-            </div>
-            {/*Actividad*/}
-            <div className="mb-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700 flex items-center"> <ListTask className="mr-2" size={20} />Actividad
-                </span>
-                <button
-                  onClick={toggleDetails}//Evento que muestra/oculta los detalles
-                  className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1  hover:bg-gray-200"
-                >
-                  {/*Por defecto esta oculto, y pasa a mostrar detalles*/}
-                  {showDetails ? "Ocultar detalles" : "Mostrar detalles"} 
-                 </button>
-              </div>
-                <input
-                  className="w-full p-2 mt-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                  type="text"
-                  placeholder="Escribe un comentario..."
-                />
-              </div>
-            </div>
-            {/* Detalles ocultos de la tarea que se van a mostrar al clickear en Mostrar detalles*/}
-            {showDetails && (
-              <div className="flex items-center gap-4">
-                {/* Avatar o iniciales */}
-                <div className="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center">
-                  EL
-                </div>
+            <div className="flex justify-between">
+              {/* Columna Izquierda */}
+              <div className="flex-1 pr-8">
+                {selectedCard && (
+                  <h2 className="font-bold text-lg mb-4 flex items-center text-gray-900">
+                    <CardHeading className="mr-2" size={20} />
+                    {selectedCard}
+                  </h2>
+                )}
 
-                {/* Contenido del texto */}
-                <div>
-                  <p className="font-bold text-gray-900">Eric Mathias Amarilla Leguizamon</p>
-                  <p className="text-gray-900">ha añadido esta tarjeta a la lista de tareas 1 sept 2024, 14:43
+                {selectedColumn && columns[selectedColumn] && (
+                  <p className="font-bold text-gray-900">
+                    En la lista de {columns[selectedColumn].name}
                   </p>
+                )}
+
+                {/* Miembros y Notificaciones */}
+                <div className="flex justify-between items-center mb-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center">
+                      IS
+                    </div>
+                    <PlusCircle className="mr-2 text-gray-900" size={25} />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button onClick={toggleFollow} className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center">
+                      <EyeFill className="mr-2 bg-gray-100" size={18} />
+                      {follow ? "Siguiendo ✔" : "Seguir"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Descripción */}
+                <div className="mb-4">
+                  <label className="text-gray-700 font-bold mb-2 flex items-center">
+                    <JustifyLeft className="mr-2" size={18} /> Descripción
+                  </label>
+                  <textarea
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="Añadir una descripción más detallada..."
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                {/* Actividad */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 flex items-center">
+                      <ListTask className="mr-2" size={18} /> Actividad
+                    </span>
+                    <button
+                      onClick={toggleDetails}
+                      className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 hover:bg-gray-200"
+                    >
+                      {showDetails ? "Ocultar detalles" : "Mostrar detalles"}
+                    </button>
+                  </div>
+                  <input
+                    className="w-full p-2 mt-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    type="text"
+                    placeholder="Escribe un comentario..."
+                  />
+                </div>
+
+                {/* Detalles ocultos de la tarea */}
+                {showDetails && (
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center">
+                      EL
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">
+                        Eric Mathias Amarilla Leguizamon
+                      </p>
+                      <p className="text-gray-900">
+                        ha añadido esta tarjeta a la lista de tareas 1 sept 2024, 14:43
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Columna Derecha (Botones) */}
+              <div className="w-64 flex flex-col gap-2 mt-4">
+                <button className="bg-gray-100 px-3 py-1 rounded mt-8 text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <PersonFillAdd className="mr-2 bg-gray-100" size={18} /> Unirse
+                </button>
+
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <PersonFill className="mr-2 bg-gray-100" size={18} /> Miembros
+                </button>
+
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <TagFill className="mr-2 bg-gray-100" size={18} /> Etiquetas
+                </button>
+
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <CardChecklist className="mr-2 bg-gray-100" size={18} /> Checklist
+                </button>
+
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <Clock className="mr-2 bg-gray-100" size={18} /> Fechas
+                </button>
+
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <Paperclip className="mr-2 bg-gray-100" size={18} /> Adjunto
+                </button>
+
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <WindowFullscreen className="mr-2 bg-gray-100" size={18} /> Portada
+                </button>
+
+                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  <Back className="mr-2 bg-gray-100" size={18} /> Campos personalizados
+                </button>
+
+                {/* Sección de Power-Ups , Automatización , Acciones */}
+                <div className="mt-8">
+                  <h4 className="font-bold text-gray-700 text-sm mb-2">Power-Ups</h4>
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                    <Plus className="mr-2 bg-gray-100" size={18} /> Añadir Power-Ups
+                  </button>
+
+                  <h4 className="font-bold text-gray-700 text-sm mt-4 mb-2">Automatización</h4>
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                    <Plus className="mr-2 bg-gray-100" size={18} /> Botón Añadir
+                  </button>
+
+                  <h4 className="font-bold text-gray-700 text-sm mt-4 mb-2">Acciones</h4>
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                    <ArrowRight className="mr-2 bg-gray-100" size={18} /> Mover
+                  </button>
+
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
+                    <Copy className="mr-2 bg-gray-100" size={18} /> Copiar
+                  </button>
+
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
+                    <WindowStack className="mr-2 bg-gray-100" size={18} /> Crear plantilla
+                  </button>
+
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
+                    <Archive className="mr-2 bg-gray-100" size={18} /> Archivar
+                  </button>
+
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
+                    <Share className="mr-2 bg-gray-100" size={18} /> Compartir
+                  </button>
                 </div>
               </div>
-            )}
-
-            {/*Botones de la derecha*/}
-            <div className="block mb-4 mt-4">
-              {/*Boton de unirse*/}
-              <div className="flex items-center gap-1">
-                  <button 
-                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200">
-                      <PersonFillAdd  className="mr-2 bg-gray-100" size={20}/>Unirse  
-                  </button>
-              </div>
-
-              {/*Boton de Miembros*/}
-              <div className="flex items-center gap-1">
-                  <button 
-                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200">
-                      <PersonFill  className="mr-2 bg-gray-100" size={20}/>Miembros  
-                  </button>
-              </div>
-              {/*Boton de Etiquetas*/}
-              <div className="flex items-center gap-1">
-                  <button 
-                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200">
-                      <TagFill className="mr-2 bg-gray-100" size={20}/>Etiquetas  
-                  </button>
-              </div>              
-
             </div>
-          </Modal>
+          </div>
+        </Modal>
       </div>
     </TableroLayout>
   );
