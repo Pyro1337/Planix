@@ -4,8 +4,8 @@ import { Plus, X , AlarmFill, HourglassBottom, Hourglass, CheckCircleFill, CardH
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { TableroLayout } from "../components/TableroLayout";
 import DatePicker from "react-datepicker";
+import Select from "react-select";
 import "react-datepicker/dist/react-datepicker.css";
-import { Alert } from "@material-tailwind/react";
 
 // Ajusta los estilos del modal para hacerlo más blanco y el fondo transparente
 const customModalStyles = {
@@ -49,11 +49,12 @@ const initialColumns = {
   },
 };
 
+
 export function TableroPage() {
   const [follow, setFollow] = useState(false); // Estado para el seguir y siguiendo.
   const [showDetails, setShowDetails] = useState(false); // Estado para el botón "Mostrar Detalles"
   const [showDelete, setShowDelete] = useState(false); // Estado para el boton Archivar -> Eliminar
-  const [columns, setColumns] = useState(initialColumns);
+  const [columns, setColumns] = useState(initialColumns);//Selector de columnas
   const [createLista, setCreateLista] = useState(false);
   const [showFilterInput, setShowFilterInput] = useState(false);
   const [listaName, setListaName] = useState(""); // Estado para el nombre de la nueva lista
@@ -66,6 +67,9 @@ export function TableroPage() {
   const [showDatePicker, setShowDatePicker] = useState(false); // Estado para mostrar/ocultar el DatePicker
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState({}); // Control de estado para las tarjetas
+  const [showMoveSelect, setShowMoveSelect] = useState(false);//Estado para mostrar la lista
+  const [selectedDestinationColumn, setSelectedDestinationColumn] = useState (null);//Estado para almacenar el destino seleccionado por el usuario.
+
 
 
   // Estado para el botón seguir y siguiendo
@@ -159,6 +163,8 @@ export function TableroPage() {
     setSelectedColumn(columnId);
     setModalIsOpen(true);
     setShowDelete(false);//seteamos que al abrir el comportamiento se resetee de archivar/eliminar y de mostrar detalles
+    setShowMoveSelect(false); //Para que al cerrar se resetee el comportamiento del selector de Mover a columna
+    setShowDatePicker(false); //Para ocultar el datepicker al volver a abrir
     setShowDetails(false);
   };
 
@@ -168,6 +174,8 @@ export function TableroPage() {
     setSelectedColumn(null);
     setShowDelete(false);//seteamos que al cerrar el comportamiento se resetee de archivar/eliminar y de mostrar detalles
     setShowDetails(false);
+    setShowDatePicker(false); //Para ocultar el datepicker al cerrar
+    setShowMoveSelect(false); //Para que al cerrar se resetee el comportamiento del selector de Mover a columna
   };
 
   //Funciona para eliminar la tarjeta
@@ -241,7 +249,36 @@ export function TableroPage() {
     closeModal(); // Cerrar el modal después de la acción
   };
   
+  //Funcion para mover la tarjeta.
 
+  // Definimos la lista de las columnas destino.
+  const columnOptions = Object.entries(columns).map(([key, column]) => ({
+    value: key,
+    label: column.name,
+  }));
+
+  const moveCard = () => {
+    if (!selectedDestinationColumn) return;
+  
+    const updatedSourceColumn = {
+      ...columns[selectedColumn],
+      items: columns[selectedColumn].items.filter((item) => item !== selectedCard),
+    };
+  
+    const updatedDestinationColumn = {
+      ...columns[selectedDestinationColumn],
+      items: [...columns[selectedDestinationColumn].items, selectedCard],
+    };
+  
+    setColumns({
+      ...columns,
+      [selectedColumn]: updatedSourceColumn,
+      [selectedDestinationColumn]: updatedDestinationColumn,
+    });
+    
+    //closeModal(); // Cerrar el modal después de mover la tarjeta
+  };
+  
   return (
     <TableroLayout>
       <div className="w-full h-full p-4 bg-[#8F3F65] overflow-auto">
@@ -546,7 +583,8 @@ export function TableroPage() {
                     selected={selectedDate}
                     onChange={(date) => handleDateChange(date)} // Aquí manejamos la selección de fecha
                     dateFormat="dd/MM/yyyy"
-                    className="mt-2 p-2 rounded"
+                    className="mt-2 p-2 rounded border-4 border-gray-900 "
+                    placeholderText="Seleccione la fecha"
                   />
                 )}
                 <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
@@ -574,9 +612,30 @@ export function TableroPage() {
                   </button>
 
                   <h4 className="font-bold text-gray-700 text-sm mt-4 mb-2">Acciones</h4>
-                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
+                  {/*Opcion de mover Tarjetas a columnas.*/}
+                  <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold"
+                    onClick={() => setShowMoveSelect(!showMoveSelect)}
+                  >
                     <ArrowRight className="mr-2 bg-gray-100" size={18} /> Mover
                   </button>
+
+                  {/*Mostramos el react-select para seleccionar el destino*/}
+                  {showMoveSelect && (
+                     <div className="mt-4">
+                        <Select
+                          options={columnOptions}
+                          onChange={(selectedOption) => setSelectedDestinationColumn(selectedOption.value)}
+                          placeholder="Selecciona la tarjeta destino"
+                          className="text-black"
+                        />
+                        {/*Boton para confirmar el traslado*/}
+                        <button className="bg-gray-800 px-3 py-1 mt-4 rounded text-white"
+                          onClick={moveCard} //llamamos a la funcion que traslada la tarjeta
+                        >
+                          Confirmar
+                        </button>
+                      </div>
+                  )}
 
                   <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 mt-2 font-bold">
                     <Copy className="mr-2 bg-gray-100" size={18} /> Copiar
