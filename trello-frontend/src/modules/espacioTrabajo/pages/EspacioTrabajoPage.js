@@ -53,7 +53,7 @@ export function EspacioTrabajoPage() {
         <h1 className="text-base font-bold mb-2">TUS TABLEROS</h1>
         <div className="flex flex-row gap-2">
           {tableros.map((tablero) => (
-            <Card nombre={tablero} onClick={() => navigate("/tableros")} />
+            <Card nombre={tablero} onClick={() => navigate("/tableros/1")} />
           ))}
           {!createTablero && (
             <div

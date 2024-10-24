@@ -3,7 +3,7 @@ import { TableroPage } from "../pages/TableroPage";
 
 export const tableroRoutes = [
   {
-    path: "/tableros",
+    path: "/tableros/:tableroId",
     element: <TableroPage />,
   },
 ];
