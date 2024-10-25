@@ -316,7 +316,24 @@ export function TableroPage() {
   };
 
   const asignarMiembro = (miembro) => {
-    console.log(miembro);
+    const newColumns = JSON.parse(JSON.stringify(columns));
+    const column = { ...columns[selectedColumn] };
+
+    // Busca el item en la columna que coincida con el name de selectedCard
+    const itemIndex = column.items.findIndex(
+      (item) => item.name === selectedCard.name
+    );
+
+    // Si se encuentra el item, actualiza el campo user
+    if (itemIndex !== -1) {
+      newColumns[selectedColumn].items[itemIndex] = {
+        ...column.items[itemIndex],
+        user: miembro.nombre,
+      };
+      setColumns(newColumns);
+    }
+    setShowUsers(false);
+    setModalIsOpen(false);
   };
 
   return (
@@ -460,7 +477,7 @@ export function TableroPage() {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`p-2 mb-2 rounded text-sm cursor-pointer ${
+                                className={`p-2 mb-2 rounded text-sm cursor-pointer text-white ${
                                   snapshot.isDragging
                                     ? "bg-green-300"
                                     : "bg-custom-body"
@@ -468,6 +485,7 @@ export function TableroPage() {
                                 onClick={() => openModal(item, columnId)}
                               >
                                 {item.name}
+                                <p className="text-custom-text">{item.user}</p>
                               </div>
                             )}
                           </Draggable>
@@ -550,9 +568,11 @@ export function TableroPage() {
                 {/* Miembros y Notificaciones */}
                 <div className="flex justify-between items-center mt-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center">
-                      {!!selectedCard && <p>{selectedCard.user.charAt(0)}</p>}
-                    </div>
+                    {!!selectedCard && !!selectedCard.user && (
+                      <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center">
+                        <p>{selectedCard.user.charAt(0)}</p>
+                      </div>
+                    )}
                     <PlusCircle
                       className="mr-2 text-gray-900 hover:cursor-pointer"
                       onClick={() => setShowUsers(!showUsers)}
@@ -584,7 +604,11 @@ export function TableroPage() {
                 {!showUsers && (
                   <div className="flex flex-row gap-2">
                     <p className="text-black font-bold">Responsable:</p>
-                    <p className="text-black">{selectedCard?.user}</p>
+                    <p className="text-black">
+                      {selectedCard
+                        ? selectedCard.user || "No asignado"
+                        : "No asignado"}
+                    </p>
                   </div>
                 )}
                 {/* Descripción */}
