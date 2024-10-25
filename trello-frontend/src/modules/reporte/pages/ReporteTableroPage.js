@@ -1,22 +1,22 @@
 import React from "react";
-import { DataPieChartTemplate, PieChartTemplate } from "../helpers/helpers";
-
-const data = [
-  { name: "Atrasados", value: 4 },
-  { name: "Pendientes", value: 6 },
-  { name: "En progreso", value: 2 },
-  { name: "Completados", value: 8 },
-];
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+import { DataPieChartTemplate, PieChartTemplate } from "../components/PieChart";
+import { useSelector } from "react-redux";
 
 export function ReporteTableroPage() {
+  const tableros = useSelector((state) => state.tablero.tableros);
+  const getData = () => {
+    const data = [];
+    Object.entries(tableros).map((tablero) => {
+      data.push({ name: tablero[1].name, value: tablero[1].items.length });
+    });
+    return data;
+  };
+
   return (
     <>
-      <div>ReporteTableroPage</div>
       <div className="flex justify-start items-center">
-        <PieChartTemplate data={data} colors={COLORS} radius={100} />
-        <DataPieChartTemplate data={data} colors={COLORS} />
+        <PieChartTemplate data={getData()} radius={100} />
+        <DataPieChartTemplate data={getData()} />
       </div>
     </>
   );
