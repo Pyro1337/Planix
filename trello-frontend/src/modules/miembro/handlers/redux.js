@@ -26,8 +26,8 @@ const miembroSlice = createSlice({
         estado: "Colaborador",
       },
       {
-        nombre: "María Estefanía Aranda",
-        username: "@mariaaranda",
+        nombre: "Juan Baez",
+        username: "@juanbaez",
         actividad: "No hay actividad reciente",
         tableros: 1,
         estado: "Colaborador",
@@ -56,8 +56,8 @@ const miembroSlice = createSlice({
     ],
   },
   reducers: {
-    setEspaciosTrabajos: (state, { payload = [] }) => {
-      state.espaciosTrabajos = payload;
+    setMiembros: (state, { payload = [] }) => {
+      state.miembros = payload;
     },
   },
 });

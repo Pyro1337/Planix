@@ -1,9 +1,18 @@
 import { Tooltip } from "@material-tailwind/react";
 import React from "react";
-import { PieChart, Pie, Cell } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 const RADIAN = Math.PI / 180;
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF", "#FF00FF", "#FF0000", "#0000FF"];
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#AF19FF",
+  "#FF00FF",
+  "#FF0000",
+  "#0000FF",
+];
 const renderCustomizedLabel = ({
   cx,
   cy,
