@@ -244,21 +244,45 @@ export function TableroPage() {
         setOriginalColumn(selectedColumn); // Guardar la columna original antes de moverla
       }
 
-      const updatedColumn = {
-        ...columns["atrasada"],
-        items: [...columns["atrasada"].items, selectedCard], // Añadir la tarjeta a la columna "Atrasada"
-      };
+      let updatedColumn = {};
+      if (!columns["atrasada"]) {
+        updatedColumn = {
+          name: "Atrasada",
+          items: [selectedCard],
+        };
+      } else {
+        updatedColumn = {
+          ...columns["atrasada"],
+          items: [...columns["atrasada"].items, selectedCard], // Añadir la tarjeta a la columna "Atrasada"
+        };
+      }
 
-      setColumns({
-        ...columns,
-        [selectedColumn]: {
-          ...columns[selectedColumn],
-          items: columns[selectedColumn].items.filter(
-            (item) => item !== selectedCard
-          ), // Eliminar la tarjeta de su columna actual
-        },
-        atrasada: updatedColumn,
-      });
+      // Si atrada no existe, se agrega al principio de todo
+      if (!columns["atrasada"]) {
+        setColumns({
+          atrasada: updatedColumn,
+          ...columns,
+          [selectedColumn]: {
+            ...columns[selectedColumn],
+            items: columns[selectedColumn].items.filter(
+              (item) => item.name !== selectedCard.name
+            ), // Eliminar la tarjeta de su columna actual
+          },
+        });
+      }
+      // Si atrada sí existe, se debe actualizar luego de ...columns o sino si ponemos antes ...columns le sobreescribe
+      else {
+        setColumns({
+          ...columns,
+          atrasada: updatedColumn,
+          [selectedColumn]: {
+            ...columns[selectedColumn],
+            items: columns[selectedColumn].items.filter(
+              (item) => item.name !== selectedCard.name
+            ), // Eliminar la tarjeta de su columna actual
+          },
+        });
+      }
     } else if (originalColumn && selectedColumn === "atrasada") {
       // Si la fecha seleccionada es mayor y la tarjeta está en "Atrasada", restaurarla a la columna original
       const updatedColumn = {
