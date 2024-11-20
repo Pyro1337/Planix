@@ -257,7 +257,7 @@ export function TableroPage() {
         };
       }
 
-      // Si atrada no existe, se agrega al principio de todo
+      // Si atrasada no existe, se agrega al principio de todo
       if (!columns["atrasada"]) {
         setColumns({
           atrasada: updatedColumn,
@@ -270,7 +270,7 @@ export function TableroPage() {
           },
         });
       }
-      // Si atrada sí existe, se debe actualizar luego de ...columns o sino si ponemos antes ...columns le sobreescribe
+      // Si atrasada sí existe, se debe actualizar luego de ...columns o sino si ponemos antes ...columns le sobreescribe
       else {
         setColumns({
           ...columns,
@@ -377,7 +377,7 @@ export function TableroPage() {
             <input
               type="text"
               className="rounded p-3 text-black w-72 h-10"
-              placeholder="Buscar por nombre de lista"
+              placeholder="Buscar por nombre de tarjeta"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
