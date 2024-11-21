@@ -38,20 +38,6 @@ export function AppBar() {
         },
       ],
     },
-    { label: "Marcado", options: [] },
-    { label: "Plantillas", options: [] },
-    {
-      label: "Opciones",
-      options: [
-        {
-          label: "Crear usuario",
-          action: () => {
-            navigate("/miembros");
-          },
-          icon: <PersonPlusFill />, // Icono del usuario
-        },
-      ],
-    },
   ];
   //Dropdown para configurar y salir.
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -78,36 +64,35 @@ export function AppBar() {
         {items.map((item, index) => (
           <Dropdown key={index} label={item.label} options={item.options} />
         ))}
-        <button className="bg-blue-500 text-black rounded px-3 py-2 hover:bg-blue-400">
-          Crear
-        </button>
       </div>
       <div className="flex flex-row justify-end items-center p-2 gap-4">
         <InputText />
         <Bell className="w-4 h-4 cursor-pointer" />
         <InfoCircle className="w-4 h-4 cursor-pointer" />
-        <div className="flex justify-center items-center w-5 h-5 rounded-full bg-orange-600 text-white hover:cursor-pointer"
-        onClick={handleToggleDropdown}
+        <div
+          className="flex justify-center items-center w-5 h-5 rounded-full bg-orange-600 text-white hover:cursor-pointer"
+          onClick={handleToggleDropdown}
         >
           A
         </div>
         {/* Dropdown */}
         {isDropdownVisible && (
           <div className="absolute right-0 mt-2 w-42 bg-black border border-gray-700 rounded shadow-lg text-white top-10">
-          <div
-            className=" flex items-center  px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer"
-            onClick={() => handleNavigate("/configuracion")}
-          >
-            <Gear className="w-4 h-4 mr-2"/>Configuración
+            <div
+              className=" flex items-center  px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer"
+              onClick={() => handleNavigate("/configuracion")}
+            >
+              <Gear className="w-4 h-4 mr-2" />
+              Configuración
+            </div>
+            <div
+              className=" flex items-center px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer"
+              onClick={() => handleNavigate("/auth/login")}
+            >
+              <BoxArrowLeft className="w-4 h-4 mr-2" />
+              Salir
+            </div>
           </div>
-          <div
-            className=" flex items-center px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer"
-            onClick={() => handleNavigate("/auth/login")}
-          >
-            <BoxArrowLeft className="w-4 h-4 mr-2"/>
-            Salir
-          </div>
-        </div>
         )}
       </div>
     </div>

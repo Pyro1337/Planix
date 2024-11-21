@@ -3,10 +3,12 @@ import { InputText } from "../../common/components/InputText";
 import TablaUsuarios from "../components/DataTable";
 import { useState } from "react";
 import Modal from "react-modal";
-import { SuccessToast } from "../../common/components/ToastMessage";
 import { useSelector } from "react-redux";
 
 export function MiembrosPage() {
+  const espacioTrabajo = useSelector(
+    (state) => state.espacioTrabajo.espacioTrabajo
+  );
   const usuarios = useSelector((state) => state.miembro.miembros);
   const [openModalInvitar, setOpenModalInvitar] = useState(false);
   const [openModalQuitar, setOpenModalQuitar] = useState(false);
@@ -14,7 +16,6 @@ export function MiembrosPage() {
     setOpenModalInvitar(false);
   };
   const onEnviarInvitacion = () => {
-    SuccessToast({ message: "Invitación enviada correctamente" });
     setOpenModalInvitar(false);
   };
   const onCloseModalQuitar = () => {
@@ -29,14 +30,14 @@ export function MiembrosPage() {
         {/* Icono e información del espacio de trabajo */}
         <div className="flex items-center space-x-4">
           {/* Icono del espacio de trabajo */}
-          <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center rounded-lg text-2xl font-bold">
-            E
+          <div
+            className={`w-12 h-12 bg-gradient-to-r ${espacioTrabajo.colorIni} ${espacioTrabajo.colorFin} flex items-center justify-center rounded-lg text-2xl font-bold`}
+          >
+            {espacioTrabajo.nombre.charAt(0).toUpperCase()}
           </div>
           {/* Información */}
           <div>
-            <h1 className="text-lg font-semibold">
-              Espacio de trabajo de Lucas Damian Goncalvez Basabe
-            </h1>
+            <h1 className="text-lg font-semibold">{espacioTrabajo.nombre}</h1>
             <p className="text-gray-400 flex items-center">
               <span className="mr-2">🔒 Privada</span>
             </p>
@@ -64,26 +65,6 @@ export function MiembrosPage() {
               visibles para el Espacio de trabajo, unirse a ellos y crear nuevos
               tableros en el Espacio de trabajo.
             </p>
-          </div>
-          <div className="border-b border-custom-text py-6">
-            <h2 className="text-base font-bold mb-2">
-              Invita a los miembros a unirse
-            </h2>
-            <div className="flex flex-row gap-2 justify-between">
-              <p className="w-3/4">
-                Cualquiera que tenga un enlace de invitación puede unirse a este
-                Espacio de trabajo gratuito. También puedes deshabilitar y crear
-                un nuevo enlace de invitación para este Espacio de trabajo en
-                cualquier momento. Las invitaciones pendientes cuentan para el
-                límite de 10 colaboradores.
-              </p>
-              <div className="flex justify-center items-center w-1/4">
-                <button className="flex flex-row justify-center items-center gap-2 border p-2 border-custom-text rounded hover:bg-gray-700">
-                  <ShareFill />
-                  Invitar por enlace
-                </button>
-              </div>
-            </div>
           </div>
           <div className="py-6">
             <InputText placeholder="Filtrar por nombre" extraClass="mb-4" />

@@ -1,50 +1,32 @@
+import React from "react";
+import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-
-// const espaciosTrabajos = [
-//   {
-//     id: 1,
-//     nombre: "Espacio de trabajo 1",
-//     colorIni: "from-red-500",
-//     colorFin: "to-orange-500",
-//   },
-//   {
-//     id: 2,
-//     nombre: "Espacio de trabajo 2",
-//     colorIni: "from-green-500",
-//     colorFin: "to-blue-500",
-//   },
-//   {
-//     id: 3,
-//     nombre: "Espacio de trabajo 3",
-//     colorIni: "from-yellow-500",
-//     colorFin: "to-pink-500",
-//   },
-//   {
-//     id: 4,
-//     nombre: "Espacio de trabajo 4",
-//     colorIni: "from-purple-500",
-//     colorFin: "to-teal-500",
-//   },
-//   {
-//     id: 5,
-//     nombre: "Espacio de trabajo 5",
-//     colorIni: "from-gray-500",
-//     colorFin: "to-gray-700",
-//   },
-// ];
+import { espacioTrabajoActions } from "../handlers/redux";
 
 export function ListaEspaciosTrabajosPage() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const espaciosTrabajos = useSelector(
     (state) => state.espacioTrabajo.espaciosTrabajos
   );
+
+  const goToEspacioTrabajo = (espacioTrabajo) => {
+    dispatch(espacioTrabajoActions.setEspacioTrabajo(espacioTrabajo));
+    navigate(`/mis-espacios-trabajo/${espacioTrabajo.id}`);
+  };
+
   return (
     <div className="flex flex-col justify-center items-center p-6 gap-2">
+      {espaciosTrabajos.length === 0 && (
+        <h1 className="text-2xl">No tienes espacios de trabajo</h1>
+      )}
       {espaciosTrabajos.map((espacioTrabajo) => (
         <div
+          key={espacioTrabajo.id}
           className="flex justify-center items-center p-4 bg-gray-900 text-white rounded-lg w-1/2 hover:border hover:border-custom-text cursor-pointer"
-          onClick={() => navigate("/espacio-trabajo")}
+          onClick={() => goToEspacioTrabajo(espacioTrabajo)}
         >
           {/* Icono e información del espacio de trabajo */}
           <div className="flex items-center space-x-4">

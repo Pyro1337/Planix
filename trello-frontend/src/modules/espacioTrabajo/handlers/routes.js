@@ -5,7 +5,7 @@ import { ListaEspaciosTrabajosPage } from "../pages/ListaEspaciosTrabajosPage";
 
 export const espacioTrabajoRoutes = [
   {
-    path: "/espacio-trabajo",
+    path: "/mis-espacios-trabajo/:espacioTrabajoId",
     element: <EspacioTrabajoPage />,
   },
   {
