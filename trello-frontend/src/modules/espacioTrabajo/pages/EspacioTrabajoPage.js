@@ -73,8 +73,8 @@ export function EspacioTrabajoPage() {
             <div className="flex flex-row gap-2">
               {tableros.map((tablero) => (
                 <Card
-                  nombre={tablero}
-                  onClick={() => navigate("/tableros/1")}
+                  nombre={tablero.nombre}
+                  onClick={() => navigate(`/tableros/${tablero.id}`)}
                 />
               ))}
               {!createTablero && (

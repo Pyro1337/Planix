@@ -19,10 +19,22 @@ const espacioTrabajoSlice = createSlice({
       state.espacioTrabajo = payload;
     },
     addTablero: (state, { payload }) => {
-      state.espacioTrabajo.tableros.push(payload);
+      state.espacioTrabajo.tableros.push({
+        id:
+          state.espacioTrabajo.id + "_" + state.espacioTrabajo.tableros.length,
+        nombre: payload,
+      });
       state.espaciosTrabajos.map((espacioTrabajo) => {
         if (espacioTrabajo.id === state.espacioTrabajo.id) {
           espacioTrabajo.tableros = state.espacioTrabajo.tableros;
+        }
+      });
+    },
+    addMiembro: (state, { payload }) => {
+      state.espacioTrabajo.miembros.push(payload);
+      state.espaciosTrabajos.map((espacioTrabajo) => {
+        if (espacioTrabajo.id === state.espacioTrabajo.id) {
+          espacioTrabajo.miembros = state.espacioTrabajo.miembros;
         }
       });
     },

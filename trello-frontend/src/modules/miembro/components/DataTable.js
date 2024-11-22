@@ -8,7 +8,7 @@ const TablaUsuarios = ({ data, onClickQuitar }) => {
           {data.map((usuario, index) => (
             <tr key={index} className="border-b border-custom-text">
               <td className="px-4 py-2">
-                <strong>{usuario.nombre}</strong>
+                <strong>{usuario.nombre} {usuario.apellido}</strong>
                 <br />
                 <span className="text-gray-500">{usuario.username}</span>
               </td>
