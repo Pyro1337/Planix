@@ -6,8 +6,6 @@ import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { espacioTrabajoActions } from "../handlers/redux";
 
-const initialTableros = ["Tablero 1", "Tablero 2", "Tablero 3"];
-
 export function EspacioTrabajoPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();

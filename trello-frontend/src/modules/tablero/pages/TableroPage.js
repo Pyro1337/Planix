@@ -17,14 +17,8 @@ import {
   TagFill,
   CardChecklist,
   Clock,
-  Paperclip,
-  WindowFullscreen,
-  Back,
   ArrowRight,
-  Copy,
-  WindowStack,
   Archive,
-  Share,
   XLg,
   Trash,
   FunnelFill,
@@ -64,7 +58,10 @@ Modal.setAppElement("#root");
 
 export function TableroPage() {
   const dispatch = useDispatch();
-  const miembros = useSelector((state) => state.miembro.miembros);
+  const espacioTrabajo = useSelector(
+    (state) => state.espacioTrabajo.espacioTrabajo
+  );
+  const { miembros = [] } = espacioTrabajo;
 
   const tableros = useSelector((state) => state.tablero.tableros);
 
@@ -89,19 +86,17 @@ export function TableroPage() {
   const [showMoveSelect, setShowMoveSelect] = useState(false); //Estado para mostrar la lista
   const [selectedDestinationColumn, setSelectedDestinationColumn] =
     useState(null); //Estado para almacenar el destino seleccionado por el usuario.
-const [showUsers, setShowUsers] = useState(false);
-//Estado para mostrar/ocultar el modal de la etiqueta
-const [showEtiquetaModal, setShowEtiquetaModal] = useState(false); // Mostrar/ocultar modal
-const [nombreEtiqueta, setNombreEtiqueta] = useState(""); // Nombre de la etiqueta
-const [colorEtiqueta, setColorEtiqueta] = useState("#FFFFFF"); // Color de la etiqueta
-const [etiquetas, setEtiquetas] = useState([]); // Lista de etiquetas
-const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocultar lista de etiquetas dentro del modal al clicar en el boton Etiquetas
-
+  const [showUsers, setShowUsers] = useState(false);
+  //Estado para mostrar/ocultar el modal de la etiqueta
+  const [showEtiquetaModal, setShowEtiquetaModal] = useState(false); // Mostrar/ocultar modal
+  const [nombreEtiqueta, setNombreEtiqueta] = useState(""); // Nombre de la etiqueta
+  const [colorEtiqueta, setColorEtiqueta] = useState("#FFFFFF"); // Color de la etiqueta
+  const [etiquetas, setEtiquetas] = useState([]); // Lista de etiquetas
+  const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocultar lista de etiquetas dentro del modal al clicar en el boton Etiquetas
 
   useEffect(() => {
     dispatch(tableroActions.setTableros(columns));
   }, [columns]);
-
 
   //Estado para mostrar ocultar creacion de etiquetas
   const crearEtiqueta = () => {
@@ -109,13 +104,13 @@ const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocul
       alert("El nombre de la etiqueta no puede estar vacío.");
       return;
     }
-  
+
     const nuevaEtiqueta = {
       id: Date.now().toString(), // ID único
       nombre: nombreEtiqueta,
       color: colorEtiqueta,
     };
-  
+
     setEtiquetas([...etiquetas, nuevaEtiqueta]); // Agregar etiqueta a la lista
     setNombreEtiqueta(""); // Resetear nombre
     setColorEtiqueta("#FFFFFF"); // Resetear color
@@ -132,7 +127,7 @@ const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocul
   // Función para alternar etiquetas seleccionadas en una tarjeta
   const toggleEtiquetaSeleccionada = (etiqueta) => {
     if (!selectedCard) return;
-  
+
     // Crear una copia de la tarjeta seleccionada
     const tarjetaActualizada = {
       ...selectedCard,
@@ -140,7 +135,7 @@ const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocul
         ? [...selectedCard.etiquetas]
         : [],
     };
-  
+
     // Verificar si la etiqueta ya existe en la tarjeta
     if (tarjetaActualizada.etiquetas.some((e) => e.id === etiqueta.id)) {
       // Si existe, la eliminamos
@@ -151,7 +146,7 @@ const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocul
       // Si no existe, la agregamos
       tarjetaActualizada.etiquetas.push(etiqueta);
     }
-  
+
     // Actualizar la columna correspondiente
     setColumns((prevColumns) => ({
       ...prevColumns,
@@ -162,33 +157,31 @@ const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocul
         ),
       },
     }));
-  
+
     // Actualizar la tarjeta seleccionada
     setSelectedCard(tarjetaActualizada);
   };
-  
-  
 
-// Función para eliminar una etiqueta de la tarjeta
-const eliminarEtiquetaDeTarjeta = (etiqueta) => {
-  const tarjetaActualizada = {
-    ...selectedCard,
-    etiquetas: selectedCard.etiquetas?.filter((e) => e.id !== etiqueta.id) || [],
+  // Función para eliminar una etiqueta de la tarjeta
+  const eliminarEtiquetaDeTarjeta = (etiqueta) => {
+    const tarjetaActualizada = {
+      ...selectedCard,
+      etiquetas:
+        selectedCard.etiquetas?.filter((e) => e.id !== etiqueta.id) || [],
+    };
+
+    setColumns({
+      ...columns,
+      [selectedColumn]: {
+        ...columns[selectedColumn],
+        items: columns[selectedColumn].items.map((item) =>
+          item.name === tarjetaActualizada.name ? tarjetaActualizada : item
+        ),
+      },
+    });
+
+    setSelectedCard(tarjetaActualizada);
   };
-
-  setColumns({
-    ...columns,
-    [selectedColumn]: {
-      ...columns[selectedColumn],
-      items: columns[selectedColumn].items.map((item) =>
-        item.name === tarjetaActualizada.name ? tarjetaActualizada : item
-      ),
-    },
-  });
-
-  setSelectedCard(tarjetaActualizada);
-};
-
 
   // Estado para el botón seguir y siguiendo
   const toggleFollow = () => {
@@ -233,7 +226,7 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
   // Función para agregar una nueva tarjeta
   const addNewCard = (columnId) => {
     if (newCardName.trim() === "") return; // Verifica que el nombre no esté vacío
-  
+
     const updatedColumn = {
       ...columns[columnId],
       items: [
@@ -248,17 +241,16 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
         },
       ],
     };
-  
+
     setColumns({
       ...columns,
       [columnId]: updatedColumn,
     });
-  
+
     setNewCardName(""); // Resetea el campo de nombre de tarjeta
     setIsAddingCard({ ...isAddingCard, [columnId]: false }); // Ocultar campo después de agregar tarjeta
   };
-  
-  
+
   // Función para cancelar la creación de tarjeta
   const cancelNewCard = (columnId) => {
     setNewCardName("");
@@ -469,7 +461,7 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
       <div className="w-full h-full p-4 bg-[#8F3F65] overflow-auto">
         {/* Botón de Filtros */}
         <div className="flex flex-row gap-4 mb-3">
-        {/* Botón Crear Etiqueta */}
+          {/* Botón Crear Etiqueta */}
           <div
             className="flex flex-row items-center font-bold text-white text-sm h-10 rounded-lg p-2 bg-[#AA6D8B] shadow-lg cursor-pointer hover:bg-[#9c627f]"
             onClick={() => setShowEtiquetaModal(true)} // Estado para mostrar el modal
@@ -493,7 +485,9 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                   <X className="w-6 h-6 cursor-pointer" />
                 </button>
 
-                <h2 className="font-bold text-lg mb-4 text-gray-900">Crear Etiqueta</h2>
+                <h2 className="font-bold text-lg mb-4 text-gray-900">
+                  Crear Etiqueta
+                </h2>
 
                 <div className="flex flex-col gap-4">
                   <input
@@ -505,7 +499,9 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                   />
 
                   <div className="flex flex-col">
-                    <label className="text-gray-700 font-bold mb-2">Seleccionar Color</label>
+                    <label className="text-gray-700 font-bold mb-2">
+                      Seleccionar Color
+                    </label>
                     <input
                       type="color"
                       className="w-16 h-16 cursor-pointer"
@@ -532,19 +528,21 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                       className="flex items-center gap-2 px-3 py-1 rounded shadow-md"
                       style={{ backgroundColor: etiqueta.color }}
                     >
-                      <span className="text-white font-bold">{etiqueta.nombre}</span>
+                      <span className="text-white font-bold">
+                        {etiqueta.nombre}
+                      </span>
                       <button
                         className="bg-red 500 text-white px-2 py-1 rounded hover:bg-red-400"
-                        onClick={() => eliminarEtiqueta(etiqueta.id)}//llamar a la funcion que elimina tarjetas
-                        >
-                          X
-                        </button>
+                        onClick={() => eliminarEtiqueta(etiqueta.id)} //llamar a la funcion que elimina tarjetas
+                      >
+                        X
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
             </Modal>
-          )}  
+          )}
           <div
             className="flex flex-row items-center font-bold text-white text-sm h-10 rounded-lg p-2 bg-[#AA6D8B] shadow-lg cursor-pointer hover:bg-[#9c627f]"
             onClick={() => setShowFilterInput(!showFilterInput)}
@@ -571,7 +569,9 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                 isMulti // Permitir múltiples selecciones
                 placeholder="Filtrar por etiquetas"
                 value={filterEtiquetas.map((etiquetaNombre) => {
-                  const etiqueta = etiquetas.find((e) => e.nombre === etiquetaNombre);
+                  const etiqueta = etiquetas.find(
+                    (e) => e.nombre === etiquetaNombre
+                  );
                   return {
                     value: etiquetaNombre,
                     label: etiquetaNombre,
@@ -579,7 +579,9 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                   };
                 })} // Mantener las etiquetas seleccionadas con su color
                 onChange={(selectedOptions) =>
-                  setFilterEtiquetas(selectedOptions.map((option) => option.value))
+                  setFilterEtiquetas(
+                    selectedOptions.map((option) => option.value)
+                  )
                 } // Actualizar el estado al seleccionar etiquetas
                 className="w-72 text-black"
                 styles={{
@@ -601,7 +603,7 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                   multiValueRemove: (styles, { data }) => ({
                     ...styles,
                     color: "white",
-                    ':hover': {
+                    ":hover": {
                       backgroundColor: data.color,
                       color: "black", // Cambia el color al hover para mejor usabilidad
                     },
@@ -722,59 +724,74 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                       </span>
                     )}
                     <div>
-                    {column.items
-                      .filter((item) => {
-                        const matchesName = item.name.toLowerCase().includes(filter.toLowerCase());
-                        const matchesEtiquetas =
-                          filterEtiquetas.length === 0 || // Si no hay etiquetas seleccionadas, no filtrar por etiquetas
-                          filterEtiquetas.some((etiqueta) =>
-                            item.etiquetas?.some((e) => e.nombre.toLowerCase() === etiqueta.toLowerCase())
-                          ); // Verificar si al menos una etiqueta coincide
-                        const matchesUser =
-                          filterUser === "" ||
-                          (item.user && item.user.toLowerCase().includes(filterUser.toLowerCase()));
+                      {column.items
+                        .filter((item) => {
+                          const matchesName = item.name
+                            .toLowerCase()
+                            .includes(filter.toLowerCase());
+                          const matchesEtiquetas =
+                            filterEtiquetas.length === 0 || // Si no hay etiquetas seleccionadas, no filtrar por etiquetas
+                            filterEtiquetas.some((etiqueta) =>
+                              item.etiquetas?.some(
+                                (e) =>
+                                  e.nombre.toLowerCase() ===
+                                  etiqueta.toLowerCase()
+                              )
+                            ); // Verificar si al menos una etiqueta coincide
+                          const matchesUser =
+                            filterUser === "" ||
+                            (item.user &&
+                              item.user
+                                .toLowerCase()
+                                .includes(filterUser.toLowerCase()));
 
-                        return matchesName && matchesEtiquetas && matchesUser; // Todas las condiciones deben cumplirse
-                      })
-                      .map((item, index) => (
-                        <Draggable key={item.name} draggableId={item.name} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={`p-2 mb-2 rounded text-sm cursor-pointer text-white ${
-                                snapshot.isDragging ? "bg-green-300" : "bg-custom-body"
-                              } border border-transparent hover:border-white`}
-                              onClick={() => openModal(item, columnId)}
-                            >
-                              {/* Título de la tarjeta */}
-                              <div>{item.name}</div>
+                          return matchesName && matchesEtiquetas && matchesUser; // Todas las condiciones deben cumplirse
+                        })
+                        .map((item, index) => (
+                          <Draggable
+                            key={item.name}
+                            draggableId={item.name}
+                            index={index}
+                          >
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`p-2 mb-2 rounded text-sm cursor-pointer text-white ${
+                                  snapshot.isDragging
+                                    ? "bg-green-300"
+                                    : "bg-custom-body"
+                                } border border-transparent hover:border-white`}
+                                onClick={() => openModal(item, columnId)}
+                              >
+                                {/* Título de la tarjeta */}
+                                <div>{item.name}</div>
 
-                              {/* Etiquetas visibles debajo del título */}
-                              {item.etiquetas?.length > 0 && (
-                                <div className="flex flex-wrap mt-2">
-                                  {item.etiquetas.map((etiqueta) => (
-                                    <div
-                                      key={etiqueta.id}
-                                      className="px-2 py-1 text-xs font-bold rounded mr-2 mb-2"
-                                      style={{
-                                        backgroundColor: etiqueta.color,
-                                        color: "#fff",
-                                      }}
-                                    >
-                                      {etiqueta.nombre}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                                {/* Etiquetas visibles debajo del título */}
+                                {item.etiquetas?.length > 0 && (
+                                  <div className="flex flex-wrap mt-2">
+                                    {item.etiquetas.map((etiqueta) => (
+                                      <div
+                                        key={etiqueta.id}
+                                        className="px-2 py-1 text-xs font-bold rounded mr-2 mb-2"
+                                        style={{
+                                          backgroundColor: etiqueta.color,
+                                          color: "#fff",
+                                        }}
+                                      >
+                                        {etiqueta.nombre}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
 
-                              {/* Usuario asignado */}
-                              <p className="text-custom-text">{item.user}</p>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
+                                {/* Usuario asignado */}
+                                <p className="text-custom-text">{item.user}</p>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
 
                       {provided.placeholder}
                     </div>
@@ -871,7 +888,7 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                             className="bg-gray-100 px-3 py-1 rounded hover:border"
                             onClick={() => asignarMiembro(miembro)}
                           >
-                            {miembro.nombre}
+                            {miembro.nombre} {miembro.apellido}
                           </button>
                         ))}
                       </div>
@@ -985,7 +1002,10 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                             <span>{etiqueta.nombre}</span>
                           </div>
                           {selectedCard.etiquetas?.includes(etiqueta) && (
-                            <CheckCircleFill className="text-green-500" size={18} />
+                            <CheckCircleFill
+                              className="text-green-500"
+                              size={18}
+                            />
                           )}
                         </div>
                       ))}
@@ -1003,11 +1023,15 @@ const eliminarEtiquetaDeTarjeta = (etiqueta) => {
                               className="flex items-center gap-2 px-3 py-1 rounded shadow-md"
                               style={{ backgroundColor: etiqueta.color }}
                             >
-                              <span className="text-white font-bold">{etiqueta.nombre}</span>
+                              <span className="text-white font-bold">
+                                {etiqueta.nombre}
+                              </span>
                               <button
                                 className="text-black font-bold px-2 py-1 rounded hover:bg-gray-200 hover:text-black"
                                 style={{ backgroundColor: "transparent" }}
-                                onClick={() => eliminarEtiquetaDeTarjeta(etiqueta)}
+                                onClick={() =>
+                                  eliminarEtiquetaDeTarjeta(etiqueta)
+                                }
                               >
                                 X
                               </button>
