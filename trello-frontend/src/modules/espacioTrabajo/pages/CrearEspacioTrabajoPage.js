@@ -55,6 +55,7 @@ export function CrearEspacioTrabajoPage() {
         tableros: [],
         miembros: [],
         owner: miembro_logueado,
+        active: true,
       };
 
       // Dispatch y otras acciones

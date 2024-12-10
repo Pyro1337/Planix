@@ -53,12 +53,14 @@ const espacioTrabajoSlice = createSlice({
     },
     updateTableroName: (state, { payload }) => {
       const { id, nombre } = payload;
-      state.espacioTrabajo.tableros = state.espacioTrabajo.tableros.map((tablero) => {
-        if (tablero.id === id) {
-          return { ...tablero, nombre };
+      state.espacioTrabajo.tableros = state.espacioTrabajo.tableros.map(
+        (tablero) => {
+          if (tablero.id === id) {
+            return { ...tablero, nombre };
+          }
+          return tablero;
         }
-        return tablero;
-      });
+      );
       state.espaciosTrabajos = state.espaciosTrabajos.map((espacio) => {
         if (espacio.id === state.espacioTrabajo.id) {
           return { ...espacio, tableros: state.espacioTrabajo.tableros };
@@ -69,15 +71,15 @@ const espacioTrabajoSlice = createSlice({
     updateTableroName: (state, { payload }) => {
       const { id, nombre } = payload;
       const tablero = state.espacioTrabajo.tableros.find((t) => t.id === id);
-    
+
       if (tablero) {
         tablero.nombre = nombre;
-    
+
         // Actualiza también en espaciosTrabajos para reflejar el cambio en ambos lugares
         const espacioTrabajoIndex = state.espaciosTrabajos.findIndex(
           (et) => et.id === state.espacioTrabajo.id
         );
-    
+
         if (espacioTrabajoIndex !== -1) {
           state.espaciosTrabajos[espacioTrabajoIndex].tableros = [
             ...state.espaciosTrabajos[espacioTrabajoIndex].tableros.map((t) =>
@@ -86,11 +88,17 @@ const espacioTrabajoSlice = createSlice({
           ];
         }
       }
-    },    
+    },
+    changeActiveState: (state, { payload }) => {
+      state.espaciosTrabajos = state.espaciosTrabajos.map((espacioTrabajo) => {
+        if (espacioTrabajo.id === payload.id) {
+          return { ...espacioTrabajo, active: !espacioTrabajo.active };
+        }
+        return espacioTrabajo;
+      });
+    },
   },
 });
-
-
 
 export const espacioTrabajoActions = espacioTrabajoSlice.actions;
 export const espacioTrabajoReducer = espacioTrabajoSlice.reducer;
