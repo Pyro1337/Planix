@@ -1,14 +1,17 @@
-import { ShareFill } from "react-bootstrap-icons";
+import { ArrowLeft, ArrowLeftCircleFill, ArrowReturnLeft, ShareFill } from "react-bootstrap-icons";
 import { InputText } from "../../common/components/InputText";
 import TablaUsuarios from "../components/DataTable";
 import { useRef, useState } from "react";
 import Modal from "react-modal";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { espacioTrabajoActions } from "../../espacioTrabajo/handlers/redux";
 
 export function MiembrosPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
 
   const espacioTrabajo = useSelector(
     (state) => state.espacioTrabajo.espacioTrabajo
@@ -68,6 +71,14 @@ export function MiembrosPage() {
 
   return (
     <>
+      <div className="flex flex-row justify-start items-center m-6 gap-8">
+        <button onClick={() => navigate("/mis-espacios-trabajo")}>
+          <ArrowLeft className="w-8 h-8" />
+        </button>
+        <h1 className="text-3xl font-bold text-white">
+          Mis Espacios de Trabajo
+        </h1>
+      </div>
       <div className="flex items-center justify-between p-4 bg-gray-900 text-white rounded-lg">
         {/* Icono e información del espacio de trabajo */}
         <div className="flex items-center space-x-4">
@@ -75,6 +86,7 @@ export function MiembrosPage() {
           <div
             className={`w-12 h-12 bg-gradient-to-r ${espacioTrabajo.colorIni} ${espacioTrabajo.colorFin} flex items-center justify-center rounded-lg text-2xl font-bold`}
           >
+            
             {espacioTrabajo.nombre.charAt(0).toUpperCase()}
           </div>
           {/* Información */}

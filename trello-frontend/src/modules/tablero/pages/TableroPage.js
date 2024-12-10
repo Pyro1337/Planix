@@ -59,12 +59,16 @@ Modal.setAppElement("#root");
 export function TableroPage() {
   const dispatch = useDispatch();
   const espacioTrabajo = useSelector(
-    (state) => state.espacioTrabajo.espacioTrabajo
+    (state) => state.espacioTrabajo?.espacioTrabajo
   );
-  const { miembros = [] } = espacioTrabajo;
+  const miembros = espacioTrabajo?.miembros || [];
+  
 
   const tableros = useSelector((state) => state.tablero.tableros);
-
+  const [showSubtaskModal, setShowSubtaskModal] = useState(false);//para las subtareas
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");//para los titulos de la subtareas.
+  const [descripcion, setDescripcion] = useState(""); // Estado para la descripción
+  const [descripcionGuardada, setDescripcionGuardada] = useState(null); // Estado para la descripción guardada dentro del modal  
   const [follow, setFollow] = useState(false); // Estado para el seguir y siguiendo.
   const [showDetails, setShowDetails] = useState(false); // Estado para el botón "Mostrar Detalles"
   const [showDelete, setShowDelete] = useState(false); // Estado para el boton Archivar -> Eliminar
@@ -93,10 +97,22 @@ export function TableroPage() {
   const [colorEtiqueta, setColorEtiqueta] = useState("#FFFFFF"); // Color de la etiqueta
   const [etiquetas, setEtiquetas] = useState([]); // Lista de etiquetas
   const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocultar lista de etiquetas dentro del modal al clicar en el boton Etiquetas
+  const [showSubtaskForm, setShowSubtaskForm] = useState(false);//controlar el comportamiento del modal de subtareas.
 
   useEffect(() => {
     dispatch(tableroActions.setTableros(columns));
   }, [columns]);
+  useEffect(() => {
+    if (selectedColumn && selectedCard) {
+      const currentCard = columns[selectedColumn]?.items.find(
+        (item) => item.name === selectedCard.name
+      );
+      if (currentCard) {
+        setSelectedCard(currentCard);
+      }
+    }
+  }, [columns, selectedColumn, selectedCard?.name]);
+  
 
   //Estado para mostrar ocultar creacion de etiquetas
   const crearEtiqueta = () => {
@@ -225,32 +241,36 @@ export function TableroPage() {
 
   // Función para agregar una nueva tarjeta
   const addNewCard = (columnId) => {
-    if (newCardName.trim() === "") return; // Verifica que el nombre no esté vacío
-
+    if (newCardName.trim() === "") return;
+  
     const updatedColumn = {
       ...columns[columnId],
       items: [
         ...columns[columnId].items,
         {
           name: newCardName,
-          description: null,
+          description: "", 
+          fechaCreacion: new Date(),
+          subtasks: [], // Agrega subtareas como una lista vacía
           fechaInicio: null,
           fechaFin: null,
           user: null,
-          etiquetas: [], // Inicializa siempre con un array vacío
+          etiquetas: [],
         },
       ],
     };
-
+  
     setColumns({
       ...columns,
       [columnId]: updatedColumn,
     });
-
-    setNewCardName(""); // Resetea el campo de nombre de tarjeta
-    setIsAddingCard({ ...isAddingCard, [columnId]: false }); // Ocultar campo después de agregar tarjeta
+  
+    setNewCardName("");
+    setIsAddingCard({ ...isAddingCard, [columnId]: false });
   };
-
+  
+  
+  
   // Función para cancelar la creación de tarjeta
   const cancelNewCard = (columnId) => {
     setNewCardName("");
@@ -455,6 +475,107 @@ export function TableroPage() {
     setShowUsers(false);
     setModalIsOpen(false);
   };
+
+  //Almacenar descripcion de la tarjeta seleccionada
+  const updateDescripcion = (descripcion) => {
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name
+            ? { ...item, description: descripcion } // Actualiza solo la tarjeta seleccionada
+            : item
+        ),
+      },
+    }));
+  };
+  
+  //Funcion para el subtask
+  const addSubtask = () => {
+    if (!newSubtaskTitle.trim() || !selectedCard) return;
+  
+    const newSubtask = {
+      id: Date.now(),
+      title: newSubtaskTitle,
+      description: "",
+      completed: false,
+    };
+  
+    const updatedCard = {
+      ...selectedCard,
+      subtasks: [...(selectedCard.subtasks || []), newSubtask],
+    };
+  
+    // Actualizamos las columnas
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name ? updatedCard : item
+        ),
+      },
+    }));
+  
+    // También actualizamos el estado de `selectedCard`
+    setSelectedCard(updatedCard);
+  
+    setNewSubtaskTitle("");
+  };
+  
+  
+
+
+  const deleteSubtask = (subtaskId) => {
+    if (!selectedCard) return;
+  
+    const updatedSubtasks = selectedCard.subtasks.filter(
+      (subtask) => subtask.id !== subtaskId
+    );
+  
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name
+            ? { ...item, subtasks: updatedSubtasks }
+            : item
+        ),
+      },
+    }));
+  };
+
+  const toggleSubtaskCompletion = (subtaskId) => {
+    if (!selectedCard) return;
+  
+    const updatedSubtasks = selectedCard.subtasks.map((subtask) =>
+      subtask.id === subtaskId
+        ? { ...subtask, completed: !subtask.completed }
+        : subtask
+    );
+  
+    const updatedCard = { ...selectedCard, subtasks: updatedSubtasks };
+  
+    // Actualizamos las columnas
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name ? updatedCard : item
+        ),
+      },
+    }));
+  
+    // También actualizamos el estado de `selectedCard`
+    setSelectedCard(updatedCard);
+  };
+  
+  
+  
+  
 
   return (
     <TableroLayout>
@@ -855,13 +976,24 @@ export function TableroPage() {
             <div className="flex justify-between">
               {/* Columna Izquierda */}
               <div className="flex-1 pr-8">
-                {selectedCard && (
+              {selectedCard && (
+                <div>
                   <h2 className="font-bold text-lg mb-4 flex items-center text-gray-900">
                     <CardHeading className="mr-2" size={20} />
                     {selectedCard.name}
                   </h2>
-                )}
-
+                  <p className="text-sm text-gray-600">
+                    <strong>Fecha de creación:</strong>{" "}
+                    {selectedCard.fechaCreacion
+                      ? new Date(selectedCard.fechaCreacion).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "No disponible"}
+                  </p>
+                </div>
+              )}
                 {selectedColumn && columns[selectedColumn] && (
                   <p className="font-bold text-gray-900">
                     En la lista de {columns[selectedColumn].name}
@@ -919,13 +1051,111 @@ export function TableroPage() {
                   <label className="text-gray-700 font-bold mb-2 flex items-center">
                     <JustifyLeft className="mr-2" size={18} /> Descripción
                   </label>
-                  <textarea
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="Añadir una descripción más detallada..."
-                    rows="3"
-                  ></textarea>
+                  {selectedCard?.editingDescription ? (
+                    <>
+                      <textarea
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="Añadir una descripción más detallada..."
+                        rows="3"
+                        value={selectedCard?.description || ""}
+                        onChange={(e) => {
+                          const nuevaDescripcion = e.target.value;
+                          setSelectedCard({ ...selectedCard, description: nuevaDescripcion }); // Actualiza localmente
+                        }}
+                      ></textarea>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          className="bg-blue-500 px-3 py-2 rounded text-white hover:bg-blue-400"
+                          onClick={() => {
+                            if (selectedCard) {
+                              updateDescripcion(selectedCard.description); // Guarda los cambios
+                              setSelectedCard({ ...selectedCard, editingDescription: false });
+                            }
+                          }}
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          className="bg-gray-500 px-3 py-2 rounded text-white hover:bg-gray-400"
+                          onClick={() => {
+                            if (selectedCard) {
+                              setSelectedCard({ ...selectedCard, editingDescription: false }); // Cancela la edición
+                            }
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-4">
+                      <p className="text-gray-900">{selectedCard?.description || "Sin descripción"}</p>
+                      <button
+                        className="text-blue-500 text-sm underline"
+                        onClick={() => setSelectedCard({ ...selectedCard, editingDescription: true })}
+                      >
+                        Editar
+                      </button>
+                    </div>
+                  )}
                 </div>
-
+                 {/* Aquí colocamos el formulario para agregar subtareas */}
+                 {showSubtaskForm && (
+                      <div className="mb-4">
+                      <h3 className="font-bold text-gray-900 mb-2">Añadir subtareas</h3>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Título de la subtarea"
+                          className="p-2 border border-gray-300 rounded w-full"
+                          value={newSubtaskTitle}
+                          onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                        />
+                        <button
+                          className="bg-blue-500 px-3 py-2 rounded text-white hover:bg-blue-400 mt-2"
+                          onClick={addSubtask}
+                        >
+                          Añadir
+                        </button>
+                      </div>
+                    </div>
+                  )}
+               {/* Lista de subtareas */}
+              {selectedCard?.subtasks && selectedCard.subtasks.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-bold text-gray-900 mb-2">Subtareas</h3>
+                  {selectedCard.subtasks.map((subtask) => (
+                    <div
+                      key={subtask.id}
+                      className={`flex items-center justify-between p-2 mb-2 rounded ${
+                        subtask.completed ? "bg-green-100" : "bg-gray-100"
+                      }`}
+                    >
+                      <div>
+                        <input
+                          type="checkbox"
+                          checked={subtask.completed}
+                          onChange={() => toggleSubtaskCompletion(subtask.id)}
+                        />
+                        <span
+                          className={`ml-2 ${
+                            subtask.completed ? "line-through text-gray-500" : ""
+                          }`}
+                        >
+                          {subtask.title}
+                        </span>
+                      </div>
+                      <button
+                        className="text-red-500 text-sm"
+                        onClick={() => deleteSubtask(subtask.id)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+                
                 {/* Actividad */}
                 <div className="mb-4">
                   <div className="flex justify-between items-center">
@@ -1043,9 +1273,11 @@ export function TableroPage() {
                   )}
                 </div>
 
-                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
-                  <CardChecklist className="mr-2 bg-gray-100" size={18} />{" "}
-                  Checklist
+                <button
+                  className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold"
+                  onClick={() => setShowSubtaskForm(!showSubtaskForm)}
+                >
+                  <CardChecklist className="mr-2 bg-gray-100" size={18} /> Checklist
                 </button>
 
                 <button
