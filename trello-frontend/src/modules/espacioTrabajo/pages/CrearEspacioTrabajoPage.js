@@ -12,6 +12,10 @@ export function CrearEspacioTrabajoPage() {
   const espaciosTrabajos = useSelector(
     (state) => state.espacioTrabajo.espaciosTrabajos
   );
+  const miembro_logueado = useSelector(
+    (state) => state.miembro.miembro_logueado
+  );
+
   const [espacioTrabajoName, setEspacioTrabajoName] = useState("");
   const colors = [
     {
@@ -50,6 +54,7 @@ export function CrearEspacioTrabajoPage() {
         colorFin: randomColor.colorFin,
         tableros: [],
         miembros: [],
+        owner: miembro_logueado,
       };
 
       // Dispatch y otras acciones

@@ -31,6 +31,10 @@ const espacioTrabajoSlice = createSlice({
       });
     },
     addMiembro: (state, { payload }) => {
+      const miembroCopy = state.espacioTrabajo.miembros.find(
+        (m) => m.username === payload.username
+      );
+      if (miembroCopy) return;
       state.espacioTrabajo.miembros.push(payload);
       state.espaciosTrabajos.map((espacioTrabajo) => {
         if (espacioTrabajo.id === state.espacioTrabajo.id) {
