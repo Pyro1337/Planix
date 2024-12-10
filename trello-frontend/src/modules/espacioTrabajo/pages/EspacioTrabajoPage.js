@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "../components/Card";
-import { PeopleFill, PersonPlusFill, X } from "react-bootstrap-icons";
+import { PencilFill, PeopleFill, PersonPlusFill, X } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -35,6 +35,28 @@ export function EspacioTrabajoPage() {
     navigate("/miembros");
   };
 
+  //Edicion del nombre del espacio de trabajo con su funcion
+  const [isEditingWorkspaceName, setIsEditingWorkspaceName] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState(espacioTrabajo.nombre);
+
+  const updateWorkspaceName = () => {
+    if (newWorkspaceName.trim() === "") return;
+    dispatch(espacioTrabajoActions.updateWorkspaceName(newWorkspaceName));
+    setIsEditingWorkspaceName(false);
+  };
+  
+  //Edicion del nombre del Tablero y su funcion
+
+  const [editingTableroId, setEditingTableroId] = useState(null);
+  const [newTableroName, setNewTableroName] = useState("");
+
+  const updateTableroName = (tableroId) => {
+    if (newTableroName.trim() === "") return;
+    dispatch(espacioTrabajoActions.updateTableroName({ id: tableroId, nombre: newTableroName }));
+    setEditingTableroId(null);
+    setNewTableroName("");
+  };
+
   return (
     <>
       {espacioTrabajo && (
@@ -50,9 +72,40 @@ export function EspacioTrabajoPage() {
               </div>
               {/* Información */}
               <div>
-                <h1 className="text-lg font-semibold">
-                  {espacioTrabajo.nombre}
-                </h1>
+              <div className="flex items-center gap-2">
+                {isEditingWorkspaceName ? (
+                  <>
+                    <input
+                      type="text"
+                      value={newWorkspaceName}
+                      onChange={(e) => setNewWorkspaceName(e.target.value)}
+                      className="p-1 border border-gray-800 rounded w-48 bg-white text-black"
+                    />
+                    <button
+                      onClick={updateWorkspaceName}
+                      className="text-blue-500 hover:underline"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setIsEditingWorkspaceName(false)}
+                      className="text-gray-500 hover:underline"
+                    >
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h1 className="text-lg font-semibold ">{espacioTrabajo.nombre}</h1>
+                    <button
+                      onClick={() => setIsEditingWorkspaceName(true)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <PencilFill />
+                    </button>
+                  </>
+                )}
+              </div>
                 <p className="text-gray-400 flex items-center">
                   <span className="mr-2">🔒 Privada</span>
                 </p>
@@ -69,12 +122,49 @@ export function EspacioTrabajoPage() {
           <div className="mt-4 w-3/5">
             <h1 className="text-base font-bold mb-2">TUS TABLEROS</h1>
             <div className="flex flex-row gap-2">
-              {tableros.map((tablero) => (
-                <Card
-                  nombre={tablero.nombre}
-                  onClick={() => navigate(`/tableros/${tablero.id}`)}
-                />
-              ))}
+            {tableros.map((tablero) => (
+              <div className="flex items-center gap-2" key={tablero.id}>
+                {editingTableroId === tablero.id ? (
+                  <div className="flex items-center gap-2 text-black">
+                    <input
+                      type="text"
+                      value={newTableroName}
+                      onChange={(e) => setNewTableroName(e.target.value)}
+                      className="p-1 border border-gray-700 rounded w-32 text-black"
+                    />
+                    <button
+                      onClick={() => updateTableroName(tablero.id)}
+                      className="text-blue-500 hover:underline"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setEditingTableroId(null)}
+                      className="text-gray-500 hover:underline"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Card
+                      nombre={tablero.nombre}
+                      onClick={() => navigate(`/tableros/${tablero.id}`)}
+                    />
+                    <button
+                      onClick={() => {
+                        setEditingTableroId(tablero.id);
+                        setNewTableroName(tablero.nombre);
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <PencilFill />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
               {!createTablero && (
                 <div
                   className={`w-48 h-24 bg-[#333C43] rounded p-4 flex items-center justify-center shadow-md cursor-pointer hover:brightness-90`}
