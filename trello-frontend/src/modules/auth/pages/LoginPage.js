@@ -3,14 +3,24 @@ import { ReactComponent as Google } from "../../auth/icons/icons8-google.svg";
 import { ReactComponent as TrelloLogo } from "../../common/icons/trello-icon.svg";
 import { ExclamationDiamondFill } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
+import ModalCreateUser from "./ModalCreateUser";
+import { miembroActions } from "../../miembro/handlers/redux";
+import { useDispatch } from "react-redux";
+import { useSelect } from "@material-tailwind/react";
+import { useSelector } from "react-redux";
 
 export function LoginPage() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const miembros = useSelector((state) => state.miembro.miembros);
+
   const [email, setEmail] = useState("");
   const [emailValid, setEmailValid] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Nuevo estado para controlar el loader
+  const [showModalCreateUser, setShowModalCreateUser] = useState(false);
 
   const onLoginPress = (e) => {
     e.preventDefault();
@@ -26,7 +36,17 @@ export function LoginPage() {
 
   const onLoginAccess = (e) => {
     e.preventDefault();
-    navigate("/mis-espacios-trabajo");
+    console.log(email, password);
+    console.log(miembros);
+    const miembroCoincidencia = miembros.find(
+      (miembro) => miembro.username === email && miembro.password === password
+    );
+    if (miembroCoincidencia) {
+      dispatch(miembroActions.setMiembroLogueado(miembroCoincidencia));
+      navigate("/mis-espacios-trabajo");
+    } else {
+      alert("El usuario o la contraseña son incorrectos.");
+    }
   };
 
   const onGoogleLogin = () => {
@@ -40,9 +60,9 @@ export function LoginPage() {
   const onChange = (field) => (e) => {
     const value = e.target.value;
     if (field === "email") {
-      setEmail(value.trim());
+      setEmail(value);
     } else if (field === "password") {
-      setPassword(value.trim());
+      setPassword(value);
     }
   };
 
@@ -52,7 +72,9 @@ export function LoginPage() {
       <div className="flex flex-col items-center gap-4">
         {/* Spinner con animación */}
         <div className="h-12 w-12 border-4 border-t-transparent border-white rounded-full animate-spin"></div>
-        <span className="text-white text-lg font-semibold">Iniciando sesión...</span>
+        <span className="text-white text-lg font-semibold">
+          Iniciando sesión...
+        </span>
       </div>
     </div>
   );
@@ -71,19 +93,16 @@ export function LoginPage() {
         <div className="flex flex-col gap-2 text-gray-600">
           <div className="input flex flex-col">
             <input
-              className={`py-2 px-2 rounded border focus:border-blue-700 focus:outline-none ${
-                emailValid ? "bg-gray-100" : ""
-              }`}
+              className={`py-2 px-2 rounded border focus:border-blue-700 focus:outline-none`}
               type="text"
               placeholder="Introduce tu correo electrónico"
-              disabled={emailValid}
               onChange={onChange("email")}
             />
             {!email && !!error && (
               <div className="flex flex-row items-center gap-1">
                 <ExclamationDiamondFill className="w-3 text-red-800" />
                 <span className="text-[12px] text-red-800">
-                  Indica una dirección de correo electrónico
+                  Indica un correo electrónico o nombre de usuario
                 </span>
               </div>
             )}
@@ -129,7 +148,10 @@ export function LoginPage() {
               Google
             </button>
             <div>
-              <span className="text-sm text-blue-700 hover:underline hover:cursor-pointer">
+              <span
+                className="text-sm text-blue-700 hover:underline hover:cursor-pointer"
+                onClick={() => setShowModalCreateUser(true)}
+              >
                 Crear cuenta
               </span>
             </div>
@@ -139,6 +161,16 @@ export function LoginPage() {
     </div>
   );
 
+  const onCloseModalCreateUser = () => {
+    setShowModalCreateUser(false);
+  };
+
+  const onCreateUser = (user) => {
+    console.log(user);
+    dispatch(miembroActions.addMiembro(user));
+    setShowModalCreateUser(false);
+  };
+
   return (
     <div>
       <div className="flex flex-col gap-4 flex-grow">
@@ -147,6 +179,11 @@ export function LoginPage() {
         </div>
       </div>
       {isLoading && renderLoader()}
+      <ModalCreateUser
+        show={showModalCreateUser}
+        onClose={onCloseModalCreateUser}
+        onCreateUser={onCreateUser}
+      />
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import { ArrowLeft, ArrowLeftCircleFill, ArrowReturnLeft, ShareFill } from "react-bootstrap-icons";
 import { InputText } from "../../common/components/InputText";
 import TablaUsuarios from "../components/DataTable";
-import { useRef, useState } from "react";
+import React, { useState } from "react";
 import Modal from "react-modal";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { espacioTrabajoActions } from "../../espacioTrabajo/handlers/redux";
+import { miembroActions } from "../handlers/redux";
 
 export function MiembrosPage() {
   const dispatch = useDispatch();
@@ -16,7 +17,9 @@ export function MiembrosPage() {
   const espacioTrabajo = useSelector(
     (state) => state.espacioTrabajo.espacioTrabajo
   );
+  const miembrosSistema = useSelector((state) => state.miembro.miembros);
   const { miembros = [] } = espacioTrabajo;
+
   const [openModalInvitar, setOpenModalInvitar] = useState(false);
   const [openModalAgregar, setOpenModalAgregar] = useState(false);
   const [openModalQuitar, setOpenModalQuitar] = useState(false);
@@ -47,7 +50,14 @@ export function MiembrosPage() {
     const nuevoMiembro = { nombre, apellido, username, ...formDataMiembro };
     console.log("Miembro agregado:", nuevoMiembro);
     dispatch(espacioTrabajoActions.addMiembro(nuevoMiembro));
-
+    dispatch(
+      miembroActions.addMiembro({
+        nombre: nuevoMiembro.nombre,
+        apellido: nuevoMiembro.apellido,
+        username: nuevoMiembro.username,
+        password: "123456",
+      })
+    );
     setFormDataMiembro({
       nombre: "",
       apellido: "",
@@ -56,10 +66,15 @@ export function MiembrosPage() {
     setOpenModalAgregar(false);
   };
 
-  const onCloseModalInvitar = () => {
+  const onAddUsuarioSistema = (usuario, index) => {
+    const agregarUsuario = window.confirm("¿Deseas agregar el usuario?");
+    if (agregarUsuario) {
+      dispatch(espacioTrabajoActions.addMiembro(usuario));
+    }
     setOpenModalInvitar(false);
   };
-  const onEnviarInvitacion = () => {
+
+  const onCloseModalInvitar = () => {
     setOpenModalInvitar(false);
   };
   const onCloseModalQuitar = () => {
@@ -102,7 +117,7 @@ export function MiembrosPage() {
           className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
           onClick={() => setOpenModalInvitar(true)}
         >
-          👤 Invitar a miembros del Espacio de trabajo
+          👤 Invitar a usuarios al Espacio de trabajo
         </button>
       </div>
       <div className="flex justify-center w-full py-2 px-8 -mx-8">
@@ -156,22 +171,25 @@ export function MiembrosPage() {
           </button>
         </div>
 
-        <input
-          type="text"
-          placeholder="Dirección de correo electrónico o nombre"
-          className="w-full p-3 bg-gray-700 text-white rounded-lg mb-4 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-
-        <p className="text-gray-400 mb-4">
-          Invita a alguien a este Espacio de trabajo:
-        </p>
-
-        <button
-          className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center"
-          onClick={onEnviarInvitacion}
-        >
-          Enviar invitación
-        </button>
+        <table className="min-w-full table-auto border-collapse">
+          <tbody className="divide-y divide-custom-text gap-2">
+            {miembrosSistema.map((usuario, index) => (
+              <tr
+                key={index}
+                className="cursor-pointer hover:bg-gray-700"
+                onClick={() => onAddUsuarioSistema(usuario, index)}
+              >
+                <td className="px-4 py-2">
+                  <strong>
+                    {usuario.nombre} {usuario.apellido}
+                  </strong>
+                  <br />
+                  <span className="text-gray-500">{usuario.username}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Modal>
       <Modal
         isOpen={openModalAgregar}
