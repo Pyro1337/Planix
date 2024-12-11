@@ -24,18 +24,21 @@ export function ReporteTableroPage() {
     Object.values(tableros).forEach((columna) => {
       columna.items.forEach((item) => {
         // Incrementa el conteo de items para cada usuario
-        if (userItemCounts[item.user]) {
-          userItemCounts[item.user]++;
+        if (userItemCounts[item.user || "Desconocido"]) {
+          userItemCounts[item.user || "Desconocido"]++;
         } else {
-          userItemCounts[item.user] = 1;
+          userItemCounts[item.user || "Desconocido"] = 1;
         }
+        console.log(userItemCounts, item);
       });
     });
     // Convierte el objeto en un arreglo en el formato solicitado
-    return Object.entries(userItemCounts).map(([name, value]) => ({
+    const data = Object.entries(userItemCounts).map(([name, value]) => ({
       name,
       value,
     }));
+    console.log("data", data);
+    return data;
   };
 
   return (
