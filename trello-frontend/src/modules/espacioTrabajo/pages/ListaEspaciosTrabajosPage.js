@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -38,14 +38,29 @@ export function ListaEspaciosTrabajosPage() {
 
   return (
     <div className="flex flex-col justify-center items-center p-6 gap-2">
-      {espaciosTrabajos.length === 0 && (
+      {espaciosTrabajos.filter((espacio) => {
+        // Verifica si el miembro_logueado es el owner
+        const esOwner = espacio.owner.username === miembro_logueado.username;
+        // Verifica si el miembro_logueado está en la lista de miembros
+        const esMiembro = espacio.miembros.some(
+          (miembro) => miembro.username === miembro_logueado.username
+        );
+        // Devuelve true si es owner o miembro
+        return esOwner || esMiembro;
+      }).length === 0 && (
         <h1 className="text-2xl">No tienes espacios de trabajo</h1>
       )}
       {espaciosTrabajos
-        .filter(
-          (espacioTrabajo) =>
-            espacioTrabajo.owner.username === miembro_logueado.username
-        )
+        .filter((espacio) => {
+          // Verifica si el miembro_logueado es el owner
+          const esOwner = espacio.owner.username === miembro_logueado.username;
+          // Verifica si el miembro_logueado está en la lista de miembros
+          const esMiembro = espacio.miembros.some(
+            (miembro) => miembro.username === miembro_logueado.username
+          );
+          // Devuelve true si es owner o miembro
+          return esOwner || esMiembro;
+        })
         .map((espacioTrabajo) => (
           <div className="flex justify-center items-center w-full">
             <div
