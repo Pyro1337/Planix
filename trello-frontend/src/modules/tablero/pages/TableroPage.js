@@ -17,17 +17,13 @@ import {
   TagFill,
   CardChecklist,
   Clock,
-  Paperclip,
-  WindowFullscreen,
-  Back,
   ArrowRight,
-  Copy,
-  WindowStack,
   Archive,
-  Share,
   XLg,
   Trash,
   FunnelFill,
+  PencilFill,
+  Tags,
 } from "react-bootstrap-icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { TableroLayout } from "../components/TableroLayout";
@@ -63,10 +59,19 @@ Modal.setAppElement("#root");
 
 export function TableroPage() {
   const dispatch = useDispatch();
-  const miembros = useSelector((state) => state.miembro.miembros);
+  const espacioTrabajo = useSelector(
+    (state) => state.espacioTrabajo?.espacioTrabajo
+  );
+  const miembros = espacioTrabajo?.miembros || [];
+  
 
   const tableros = useSelector((state) => state.tablero.tableros);
-
+  const [showSubtaskModal, setShowSubtaskModal] = useState(false);//para las subtareas
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");//para los titulos de la subtareas.
+  const [editingListId, setEditingListId] = useState(null); // ID de la lista en edición
+  const [tempListName, setTempListName] = useState(""); // Nombre temporal de la lista en edición
+  const [descripcion, setDescripcion] = useState(""); // Estado para la descripción
+  const [descripcionGuardada, setDescripcionGuardada] = useState(null); // Estado para la descripción guardada dentro del modal  
   const [follow, setFollow] = useState(false); // Estado para el seguir y siguiendo.
   const [showDetails, setShowDetails] = useState(false); // Estado para el botón "Mostrar Detalles"
   const [showDelete, setShowDelete] = useState(false); // Estado para el boton Archivar -> Eliminar
@@ -76,7 +81,9 @@ export function TableroPage() {
   const [listaName, setListaName] = useState(""); // Estado para el nombre de la nueva lista
   const [newCardName, setNewCardName] = useState(""); // Estado para el nombre de la nueva tarjeta
   const [selectedCard, setSelectedCard] = useState(null);
-  const [filter, setFilter] = useState(""); // Estado para el filtro
+  const [filter, setFilter] = useState(""); // Estado para el filtro por nombre tarjeta
+  const [filterEtiquetas, setFilterEtiquetas] = useState([]); // Estado para las etiquetas seleccionadas en el filtro
+  const [filterUser, setFilterUser] = useState(""); // Estado para el filtro por nombre de usuario
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null); //estado para las fechas
   const [originalColumn, setOriginalColumn] = useState(null); // Almacena la columna original de la tarjeta
@@ -87,10 +94,139 @@ export function TableroPage() {
   const [selectedDestinationColumn, setSelectedDestinationColumn] =
     useState(null); //Estado para almacenar el destino seleccionado por el usuario.
   const [showUsers, setShowUsers] = useState(false);
+  //Estado para mostrar/ocultar el modal de la etiqueta
+  const [showEtiquetaModal, setShowEtiquetaModal] = useState(false); // Mostrar/ocultar modal
+  const [nombreEtiqueta, setNombreEtiqueta] = useState(""); // Nombre de la etiqueta
+  const [colorEtiqueta, setColorEtiqueta] = useState("#FFFFFF"); // Color de la etiqueta
+  const [etiquetas, setEtiquetas] = useState([]); // Lista de etiquetas
+  const [showEtiquetaList, setShowEtiquetaList] = useState(false); // Mostrar/ocultar lista de etiquetas dentro del modal al clicar en el boton Etiquetas
+  const [showSubtaskForm, setShowSubtaskForm] = useState(false);//controlar el comportamiento del modal de subtareas.
 
   useEffect(() => {
     dispatch(tableroActions.setTableros(columns));
   }, [columns]);
+  useEffect(() => {
+    if (selectedColumn && selectedCard) {
+      const currentCard = columns[selectedColumn]?.items.find(
+        (item) => item.name === selectedCard.name
+      );
+      if (currentCard) {
+        setSelectedCard(currentCard);
+      }
+    }
+  }, [columns, selectedColumn, selectedCard?.name]);
+  
+      // Función para iniciar la edición
+    const startEditingList = (columnId, currentName) => {
+      setEditingListId(columnId); // Configura la lista en edición
+      setTempListName(currentName); // Llena el estado temporal con el nombre actual
+    };
+
+    // Función para guardar el nombre editado
+    const saveEditedListName = (columnId) => {
+      if (tempListName.trim() === "") return; // Evita guardar nombres vacíos
+
+      setColumns((prevColumns) => ({
+        ...prevColumns,
+        [columnId]: {
+          ...prevColumns[columnId],
+          name: tempListName, // Actualiza el nombre de la lista
+        },
+      }));
+
+      setEditingListId(null); // Salir del modo edición
+    };
+
+    // Función para cancelar la edición
+    const cancelEditingList = () => {
+      setEditingListId(null); // Salir del modo edición sin guardar
+      setTempListName(""); // Limpia el estado temporal
+    };
+
+  //Estado para mostrar ocultar creacion de etiquetas
+  const crearEtiqueta = () => {
+    if (nombreEtiqueta.trim() === "") {
+      alert("El nombre de la etiqueta no puede estar vacío.");
+      return;
+    }
+
+    const nuevaEtiqueta = {
+      id: Date.now().toString(), // ID único
+      nombre: nombreEtiqueta,
+      color: colorEtiqueta,
+    };
+
+    setEtiquetas([...etiquetas, nuevaEtiqueta]); // Agregar etiqueta a la lista
+    setNombreEtiqueta(""); // Resetear nombre
+    setColorEtiqueta("#FFFFFF"); // Resetear color
+    setShowEtiquetaModal(false); // Cerrar modal
+  };
+
+  //Estado para eliminar etiquetas
+  const eliminarEtiqueta = (id) => {
+    const nuevasEtiquetas = etiquetas.filter((etiqueta) => etiqueta.id !== id); // Filtrar etiquetas por ID
+    setEtiquetas(nuevasEtiquetas); // Actualizar estado
+  };
+
+  //Estado y Funciones para el boton de Etiquetas dentro del modal
+  // Función para alternar etiquetas seleccionadas en una tarjeta
+  const toggleEtiquetaSeleccionada = (etiqueta) => {
+    if (!selectedCard) return;
+
+    // Crear una copia de la tarjeta seleccionada
+    const tarjetaActualizada = {
+      ...selectedCard,
+      etiquetas: Array.isArray(selectedCard.etiquetas)
+        ? [...selectedCard.etiquetas]
+        : [],
+    };
+
+    // Verificar si la etiqueta ya existe en la tarjeta
+    if (tarjetaActualizada.etiquetas.some((e) => e.id === etiqueta.id)) {
+      // Si existe, la eliminamos
+      tarjetaActualizada.etiquetas = tarjetaActualizada.etiquetas.filter(
+        (e) => e.id !== etiqueta.id
+      );
+    } else {
+      // Si no existe, la agregamos
+      tarjetaActualizada.etiquetas.push(etiqueta);
+    }
+
+    // Actualizar la columna correspondiente
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === tarjetaActualizada.name ? tarjetaActualizada : item
+        ),
+      },
+    }));
+
+    // Actualizar la tarjeta seleccionada
+    setSelectedCard(tarjetaActualizada);
+  };
+
+  // Función para eliminar una etiqueta de la tarjeta
+  const eliminarEtiquetaDeTarjeta = (etiqueta) => {
+    const tarjetaActualizada = {
+      ...selectedCard,
+      etiquetas:
+        selectedCard.etiquetas?.filter((e) => e.id !== etiqueta.id) || [],
+    };
+
+    setColumns({
+      ...columns,
+      [selectedColumn]: {
+        ...columns[selectedColumn],
+        items: columns[selectedColumn].items.map((item) =>
+          item.name === tarjetaActualizada.name ? tarjetaActualizada : item
+        ),
+      },
+    });
+
+    setSelectedCard(tarjetaActualizada);
+  };
 
   // Estado para el botón seguir y siguiendo
   const toggleFollow = () => {
@@ -134,28 +270,37 @@ export function TableroPage() {
 
   // Función para agregar una nueva tarjeta
   const addNewCard = (columnId) => {
-    if (newCardName.trim() === "") return; // Verifica que el nombre no esté vacío
+    if (newCardName.trim() === "") return;
+  
     const updatedColumn = {
       ...columns[columnId],
       items: [
         ...columns[columnId].items,
         {
           name: newCardName,
-          description: null,
+          description: "", 
+          fechaCreacion: new Date(),
+          fechaVencimiento: selectedDate || null, // Asignar la fecha seleccionada o dejarla como null
+          subtasks: [], // Agrega subtareas como una lista vacía
           fechaInicio: null,
           fechaFin: null,
           user: null,
+          etiquetas: [],
         },
-      ], // Añade la nueva tarjeta
+      ],
     };
+  
     setColumns({
       ...columns,
       [columnId]: updatedColumn,
     });
-    setNewCardName(""); // Resetea el campo de nombre de tarjeta
-    setIsAddingCard({ ...isAddingCard, [columnId]: false }); // Ocultar campo después de agregar tarjeta
+  
+    setNewCardName("");
+    setIsAddingCard({ ...isAddingCard, [columnId]: false });
   };
-
+  
+  
+  
   // Función para cancelar la creación de tarjeta
   const cancelNewCard = (columnId) => {
     setNewCardName("");
@@ -199,12 +344,13 @@ export function TableroPage() {
 
   const closeModal = () => {
     setModalIsOpen(false);
-    setSelectedCard(null);
+    setShowEtiquetaList(false); // Oculta la lista de etiquetas
+    setSelectedCard(null); // Limpia la tarjeta seleccionada
     setSelectedColumn(null);
-    setShowDelete(false); //seteamos que al cerrar el comportamiento se resetee de archivar/eliminar y de mostrar detalles
+    setShowDelete(false); // Resetea el comportamiento de archivar/eliminar
     setShowDetails(false);
-    setShowDatePicker(false); //Para ocultar el datepicker al cerrar
-    setShowMoveSelect(false); //Para que al cerrar se resetee el comportamiento del selector de Mover a columna
+    setShowDatePicker(false); // Oculta el datepicker al cerrar
+    setShowMoveSelect(false); // Resetea el comportamiento del selector de mover
   };
 
   //Funciona para eliminar la tarjeta
@@ -233,10 +379,30 @@ export function TableroPage() {
 
   //Funcion para las fechas
   const handleDateChange = (date) => {
-    setSelectedDate(date); // Almacena la fecha seleccionada
+    if (!selectedCard || !selectedColumn) return;
 
     const currentDate = new Date(); // Fecha actual
-
+  
+    // Actualiza el estado de la fecha seleccionada
+    setSelectedDate(date);
+  
+    // Actualiza la tarjeta seleccionada con la nueva fecha de vencimiento
+    const updatedCard = { ...selectedCard, fechaVencimiento: date };
+  
+    // Actualizamos las columnas para reflejar el cambio en la tarjeta
+    const updatedColumns = {
+      ...columns,
+      [selectedColumn]: {
+        ...columns[selectedColumn],
+        items: columns[selectedColumn].items.map((item) =>
+          item.name === updatedCard.name ? updatedCard : item
+        ),
+      },
+    };
+  
+    // Actualizar el estado global de columnas y el estado local de la tarjeta seleccionada
+    setColumns(updatedColumns);
+    setSelectedCard(updatedCard);
     if (date < currentDate) {
       // Si la fecha seleccionada es menor que la actual, mover a "Atrasada"
       // Guardar la columna original solo si la tarjeta no estaba previamente en "Atrasada"
@@ -244,21 +410,45 @@ export function TableroPage() {
         setOriginalColumn(selectedColumn); // Guardar la columna original antes de moverla
       }
 
-      const updatedColumn = {
-        ...columns["atrasada"],
-        items: [...columns["atrasada"].items, selectedCard], // Añadir la tarjeta a la columna "Atrasada"
-      };
+      let updatedColumn = {};
+      if (!columns["atrasada"]) {
+        updatedColumn = {
+          name: "Atrasada",
+          items: [selectedCard],
+        };
+      } else {
+        updatedColumn = {
+          ...columns["atrasada"],
+          items: [...columns["atrasada"].items, selectedCard], // Añadir la tarjeta a la columna "Atrasada"
+        };
+      }
 
-      setColumns({
-        ...columns,
-        [selectedColumn]: {
-          ...columns[selectedColumn],
-          items: columns[selectedColumn].items.filter(
-            (item) => item !== selectedCard
-          ), // Eliminar la tarjeta de su columna actual
-        },
-        atrasada: updatedColumn,
-      });
+      // Si atrasada no existe, se agrega al principio de todo
+      if (!columns["atrasada"]) {
+        setColumns({
+          atrasada: updatedColumn,
+          ...columns,
+          [selectedColumn]: {
+            ...columns[selectedColumn],
+            items: columns[selectedColumn].items.filter(
+              (item) => item.name !== selectedCard.name
+            ), // Eliminar la tarjeta de su columna actual
+          },
+        });
+      }
+      // Si atrasada sí existe, se debe actualizar luego de ...columns o sino si ponemos antes ...columns le sobreescribe
+      else {
+        setColumns({
+          ...columns,
+          atrasada: updatedColumn,
+          [selectedColumn]: {
+            ...columns[selectedColumn],
+            items: columns[selectedColumn].items.filter(
+              (item) => item.name !== selectedCard.name
+            ), // Eliminar la tarjeta de su columna actual
+          },
+        });
+      }
     } else if (originalColumn && selectedColumn === "atrasada") {
       // Si la fecha seleccionada es mayor y la tarjeta está en "Atrasada", restaurarla a la columna original
       const updatedColumn = {
@@ -280,7 +470,7 @@ export function TableroPage() {
       setOriginalColumn(null); // Limpiar la columna original después de mover la tarjeta de vuelta
     }
 
-    closeModal(); // Cerrar el modal después de la acción
+    //closeModal(); // Cerrar el modal después de la acción
   };
 
   //Funcion para mover la tarjeta.
@@ -336,11 +526,194 @@ export function TableroPage() {
     setModalIsOpen(false);
   };
 
+  //Almacenar descripcion de la tarjeta seleccionada
+  const updateDescripcion = (descripcion) => {
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name
+            ? { ...item, description: descripcion } // Actualiza solo la tarjeta seleccionada
+            : item
+        ),
+      },
+    }));
+  };
+  
+  //Funcion para el subtask
+  const addSubtask = () => {
+    if (!newSubtaskTitle.trim() || !selectedCard) return;
+  
+    const newSubtask = {
+      id: Date.now(),
+      title: newSubtaskTitle,
+      description: "",
+      completed: false,
+    };
+  
+    const updatedCard = {
+      ...selectedCard,
+      subtasks: [...(selectedCard.subtasks || []), newSubtask],
+    };
+  
+    // Actualizamos las columnas
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name ? updatedCard : item
+        ),
+      },
+    }));
+  
+    // También actualizamos el estado de `selectedCard`
+    setSelectedCard(updatedCard);
+  
+    setNewSubtaskTitle("");
+  };
+  
+  
+
+
+  const deleteSubtask = (subtaskId) => {
+    if (!selectedCard) return;
+  
+    const updatedSubtasks = selectedCard.subtasks.filter(
+      (subtask) => subtask.id !== subtaskId
+    );
+  
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name
+            ? { ...item, subtasks: updatedSubtasks }
+            : item
+        ),
+      },
+    }));
+  };
+
+  const toggleSubtaskCompletion = (subtaskId) => {
+    if (!selectedCard) return;
+  
+    const updatedSubtasks = selectedCard.subtasks.map((subtask) =>
+      subtask.id === subtaskId
+        ? { ...subtask, completed: !subtask.completed }
+        : subtask
+    );
+  
+    const updatedCard = { ...selectedCard, subtasks: updatedSubtasks };
+  
+    // Actualizamos las columnas
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [selectedColumn]: {
+        ...prevColumns[selectedColumn],
+        items: prevColumns[selectedColumn].items.map((item) =>
+          item.name === selectedCard.name ? updatedCard : item
+        ),
+      },
+    }));
+  
+    // También actualizamos el estado de `selectedCard`
+    setSelectedCard(updatedCard);
+  };
+  
+  
+  
+  
+
   return (
     <TableroLayout>
       <div className="w-full h-full p-4 bg-[#8F3F65] overflow-auto">
         {/* Botón de Filtros */}
         <div className="flex flex-row gap-4 mb-3">
+          {/* Botón Crear Etiqueta */}
+          <div
+            className="flex flex-row items-center font-bold text-white text-sm h-10 rounded-lg p-2 bg-[#AA6D8B] shadow-lg cursor-pointer hover:bg-[#9c627f]"
+            onClick={() => setShowEtiquetaModal(true)} // Estado para mostrar el modal
+          >
+            <Tags className="w-6 h-6" />
+            <span className="ml-2">Crear etiquetas</span>
+          </div>
+          {/* Modal para crear etiqueta */}
+          {showEtiquetaModal && (
+            <Modal
+              isOpen={showEtiquetaModal}
+              onRequestClose={() => setShowEtiquetaModal(false)}
+              style={customModalStyles}
+              contentLabel="Crear Etiqueta"
+            >
+              <div className="relative">
+                <button
+                  className="absolute top-2 right-2 hover:bg-gray-500 hover:rounded-full"
+                  onClick={() => setShowEtiquetaModal(false)}
+                >
+                  <X className="w-6 h-6 cursor-pointer" />
+                </button>
+
+                <h2 className="font-bold text-lg mb-4 text-gray-900">
+                  Crear Etiqueta
+                </h2>
+
+                <div className="flex flex-col gap-4">
+                  <input
+                    type="text"
+                    placeholder="Nombre de la etiqueta"
+                    className="p-2 border border-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={nombreEtiqueta}
+                    onChange={(e) => setNombreEtiqueta(e.target.value)} // Guardar nombre
+                  />
+
+                  <div className="flex flex-col">
+                    <label className="text-gray-700 font-bold mb-2">
+                      Seleccionar Color
+                    </label>
+                    <input
+                      type="color"
+                      className="w-16 h-16 cursor-pointer"
+                      value={colorEtiqueta}
+                      onChange={(e) => setColorEtiqueta(e.target.value)} // Guardar color
+                    />
+                  </div>
+
+                  <button
+                    className="bg-blue-500 px-3 py-2 rounded text-white hover:bg-blue-400"
+                    onClick={crearEtiqueta} // Función para guardar etiqueta
+                  >
+                    Crear
+                  </button>
+                </div>
+              </div>
+              {/* Lista de etiquetas creadas */}
+              <div className="mt-4">
+                <h3 className="font-bold text-white mb-2">Etiquetas Creadas</h3>
+                <div className="flex flex-wrap gap-2">
+                  {etiquetas.map((etiqueta) => (
+                    <div
+                      key={etiqueta.id}
+                      className="flex items-center gap-2 px-3 py-1 rounded shadow-md"
+                      style={{ backgroundColor: etiqueta.color }}
+                    >
+                      <span className="text-white font-bold">
+                        {etiqueta.nombre}
+                      </span>
+                      <button
+                        className="bg-red 500 text-white px-2 py-1 rounded hover:bg-red-400"
+                        onClick={() => eliminarEtiqueta(etiqueta.id)} //llamar a la funcion que elimina tarjetas
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Modal>
+          )}
           <div
             className="flex flex-row items-center font-bold text-white text-sm h-10 rounded-lg p-2 bg-[#AA6D8B] shadow-lg cursor-pointer hover:bg-[#9c627f]"
             onClick={() => setShowFilterInput(!showFilterInput)}
@@ -348,16 +721,76 @@ export function TableroPage() {
             <FunnelFill className="w-6 h-6" />
             <span className="ml-2">Filtros</span>
           </div>
-          {/* Input para buscar */}
+          {/* Input para buscar por nombre de tarjeta y de etiqueta */}
           {showFilterInput && (
-            <input
-              type="text"
-              className="rounded p-3 text-black w-72 h-10"
-              placeholder="Buscar por nombre de lista"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="rounded p-3 text-black w-72 h-10"
+                placeholder="Buscar por nombre de tarjeta"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              />
+              <Select
+                options={etiquetas.map((etiqueta) => ({
+                  value: etiqueta.nombre,
+                  label: etiqueta.nombre,
+                  color: etiqueta.color, // Guardamos el color como parte de la opción
+                }))} // Opciones del dropdown basadas en las etiquetas creadas
+                isMulti // Permitir múltiples selecciones
+                placeholder="Filtrar por etiquetas"
+                value={filterEtiquetas.map((etiquetaNombre) => {
+                  const etiqueta = etiquetas.find(
+                    (e) => e.nombre === etiquetaNombre
+                  );
+                  return {
+                    value: etiquetaNombre,
+                    label: etiquetaNombre,
+                    color: etiqueta?.color || "#FFFFFF", // Aplicamos el color correspondiente
+                  };
+                })} // Mantener las etiquetas seleccionadas con su color
+                onChange={(selectedOptions) =>
+                  setFilterEtiquetas(
+                    selectedOptions.map((option) => option.value)
+                  )
+                } // Actualizar el estado al seleccionar etiquetas
+                className="w-72 text-black"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    backgroundColor: "#f8f9fa",
+                  }),
+                  multiValue: (styles, { data }) => ({
+                    ...styles,
+                    backgroundColor: data.color, // Usar el color de la etiqueta
+                    color: "white",
+                    borderRadius: "4px",
+                    padding: "2px 4px",
+                  }),
+                  multiValueLabel: (styles, { data }) => ({
+                    ...styles,
+                    color: "white", // Texto blanco para contraste
+                  }),
+                  multiValueRemove: (styles, { data }) => ({
+                    ...styles,
+                    color: "white",
+                    ":hover": {
+                      backgroundColor: data.color,
+                      color: "black", // Cambia el color al hover para mejor usabilidad
+                    },
+                  }),
+                }}
+              />
+              <input
+                type="text"
+                className="rounded p-3 text-black w-72 h-10"
+                placeholder="Buscar por miembro"
+                value={filterUser}
+                onChange={(e) => setFilterUser(e.target.value)}
+              />
+            </div>
           )}
+
           {!createLista && (
             <div className="flex items-center gap-4">
               <div
@@ -404,58 +837,82 @@ export function TableroPage() {
                       columnId === "atrasada" ? "border-4 border-red-600" : ""
                     }`}
                   >
-                    <div className="flex justify-between">
-                      <h2 className="font-bold text-md mb-2 flex items-center">
-                        {column.name}
-                        {columnId === "atrasada" && (
-                          <>
-                            <AlarmFill
-                              className="ml-2 text-red-500"
-                              size={20}
-                            />
-                            <span
-                              style={{
-                                animation: "blinkingText 1.5s infinite",
-                                color: "red",
-                              }}
-                            >
-                              ¡Atención!
-                            </span>
-                            <style>
-                              {`
-                          @keyframes blinkingText {
-                            0% { color: red; }
-                            50% { color: black; }
-                            100% { color: red; }
-                          }
-                        `}
-                            </style>
-                          </>
-                        )}
-                        {columnId === "pendiente" && (
-                          <Hourglass className="ml-2 text-gray-400" size={20} />
-                        )}
-                        {columnId === "enProgreso" && (
-                          <HourglassBottom
-                            className="ml-2 text-gray-400"
-                            size={20}
+                    <div className="flex justify-between items-center">
+                      {editingListId === columnId ? (
+                        // Modo de edición: Mostrar campo de entrada y botones
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={tempListName}
+                            onChange={(e) => setTempListName(e.target.value)}
+                            className="p-2 text-sm rounded border border-gray-300"
                           />
-                        )}
-                        {columnId === "completado" && (
-                          <CheckCircleFill
-                            className="ml-2 text-green-600"
-                            size={20}
-                          />
-                        )}
-                      </h2>
+                          <button
+                            className="text-green-500 font-bold"
+                            onClick={() => saveEditedListName(columnId)}
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            className="text-red-500 font-bold"
+                            onClick={cancelEditingList}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        // Modo normal: Mostrar nombre de lista con ícono de lápiz
+                        <h2 className="font-bold text-md mb-2 flex items-center">
+                          {column.name}
+                          {columnId === "atrasada" && (
+                            <>
+                              <AlarmFill className="ml-2 text-red-500" size={20} />
+                              <span
+                                style={{
+                                  animation: "blinkingText 1.5s infinite",
+                                  color: "red",
+                                }}
+                              >
+                                ¡Atención!
+                              </span>
+                              <style>
+                                {`
+                                  @keyframes blinkingText {
+                                    0% { color: red; }
+                                    50% { color: black; }
+                                    100% { color: red; }
+                                  }
+                                `}
+                              </style>
+                            </>
+                          )}
+                          {columnId === "pendiente" && (
+                            <Hourglass className="ml-2 text-gray-400" size={20} />
+                          )}
+                          {columnId === "enProgreso" && (
+                            <HourglassBottom className="ml-2 text-gray-400" size={20} />
+                          )}
+                          {columnId === "completado" && (
+                            <CheckCircleFill className="ml-2 text-green-600" size={20} />
+                          )}
+                          <button
+                            onClick={() => startEditingList(columnId, column.name)}
+                            className="ml-2 text-gray-500 hover:text-gray-200"
+                          >
+                            <PencilFill size={16} />
+                          </button>
+                        </h2>
+                      )}
+
                       {/* Botón de eliminar lista */}
                       <button
-                        onClick={() => deleteList(columnId)} // Evento para eliminar la lista
+                        onClick={() => deleteList(columnId)}
                         className="bg-black-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
                       >
                         <X className="w-6 h-6" />
                       </button>
                     </div>
+
                     {column.items.length > 3 && (
                       <span className="text-sm text-red-500">
                         Cantidad máxima de tareas
@@ -463,9 +920,28 @@ export function TableroPage() {
                     )}
                     <div>
                       {column.items
-                        .filter((item) =>
-                          item.name.toLowerCase().includes(filter.toLowerCase())
-                        )
+                        .filter((item) => {
+                          const matchesName = item.name
+                            .toLowerCase()
+                            .includes(filter.toLowerCase());
+                          const matchesEtiquetas =
+                            filterEtiquetas.length === 0 || // Si no hay etiquetas seleccionadas, no filtrar por etiquetas
+                            filterEtiquetas.some((etiqueta) =>
+                              item.etiquetas?.some(
+                                (e) =>
+                                  e.nombre.toLowerCase() ===
+                                  etiqueta.toLowerCase()
+                              )
+                            ); // Verificar si al menos una etiqueta coincide
+                          const matchesUser =
+                            filterUser === "" ||
+                            (item.user &&
+                              item.user
+                                .toLowerCase()
+                                .includes(filterUser.toLowerCase()));
+
+                          return matchesName && matchesEtiquetas && matchesUser; // Todas las condiciones deben cumplirse
+                        })
                         .map((item, index) => (
                           <Draggable
                             key={item.name}
@@ -484,12 +960,34 @@ export function TableroPage() {
                                 } border border-transparent hover:border-white`}
                                 onClick={() => openModal(item, columnId)}
                               >
-                                {item.name}
+                                {/* Título de la tarjeta */}
+                                <div>{item.name}</div>
+
+                                {/* Etiquetas visibles debajo del título */}
+                                {item.etiquetas?.length > 0 && (
+                                  <div className="flex flex-wrap mt-2">
+                                    {item.etiquetas.map((etiqueta) => (
+                                      <div
+                                        key={etiqueta.id}
+                                        className="px-2 py-1 text-xs font-bold rounded mr-2 mb-2"
+                                        style={{
+                                          backgroundColor: etiqueta.color,
+                                          color: "#fff",
+                                        }}
+                                      >
+                                        {etiqueta.nombre}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Usuario asignado */}
                                 <p className="text-custom-text">{item.user}</p>
                               </div>
                             )}
                           </Draggable>
                         ))}
+
                       {provided.placeholder}
                     </div>
                     {isAddingCard[columnId] ? (
@@ -552,13 +1050,34 @@ export function TableroPage() {
             <div className="flex justify-between">
               {/* Columna Izquierda */}
               <div className="flex-1 pr-8">
-                {selectedCard && (
+              {selectedCard && (
+                <div>
                   <h2 className="font-bold text-lg mb-4 flex items-center text-gray-900">
                     <CardHeading className="mr-2" size={20} />
                     {selectedCard.name}
                   </h2>
-                )}
-
+                  <p className="text-sm text-gray-600">
+                    <strong>Fecha de creación:</strong>{" "}
+                    {selectedCard.fechaCreacion
+                      ? new Date(selectedCard.fechaCreacion).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "No disponible"}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <strong>Fecha de vencimiento:</strong>{" "}
+                    {selectedCard.fechaVencimiento
+                      ? new Date(selectedCard.fechaVencimiento).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "No establecida"}
+                  </p>
+                </div>
+              )}
                 {selectedColumn && columns[selectedColumn] && (
                   <p className="font-bold text-gray-900">
                     En la lista de {columns[selectedColumn].name}
@@ -585,7 +1104,7 @@ export function TableroPage() {
                             className="bg-gray-100 px-3 py-1 rounded hover:border"
                             onClick={() => asignarMiembro(miembro)}
                           >
-                            {miembro.nombre}
+                            {miembro.nombre} {miembro.apellido}
                           </button>
                         ))}
                       </div>
@@ -616,13 +1135,111 @@ export function TableroPage() {
                   <label className="text-gray-700 font-bold mb-2 flex items-center">
                     <JustifyLeft className="mr-2" size={18} /> Descripción
                   </label>
-                  <textarea
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="Añadir una descripción más detallada..."
-                    rows="3"
-                  ></textarea>
+                  {selectedCard?.editingDescription ? (
+                    <>
+                      <textarea
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="Añadir una descripción más detallada..."
+                        rows="3"
+                        value={selectedCard?.description || ""}
+                        onChange={(e) => {
+                          const nuevaDescripcion = e.target.value;
+                          setSelectedCard({ ...selectedCard, description: nuevaDescripcion }); // Actualiza localmente
+                        }}
+                      ></textarea>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          className="bg-blue-500 px-3 py-2 rounded text-white hover:bg-blue-400"
+                          onClick={() => {
+                            if (selectedCard) {
+                              updateDescripcion(selectedCard.description); // Guarda los cambios
+                              setSelectedCard({ ...selectedCard, editingDescription: false });
+                            }
+                          }}
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          className="bg-gray-500 px-3 py-2 rounded text-white hover:bg-gray-400"
+                          onClick={() => {
+                            if (selectedCard) {
+                              setSelectedCard({ ...selectedCard, editingDescription: false }); // Cancela la edición
+                            }
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-4">
+                      <p className="text-gray-900">{selectedCard?.description || "Sin descripción"}</p>
+                      <button
+                        className="text-blue-500 text-sm underline"
+                        onClick={() => setSelectedCard({ ...selectedCard, editingDescription: true })}
+                      >
+                        Editar
+                      </button>
+                    </div>
+                  )}
                 </div>
-
+                 {/* Aquí colocamos el formulario para agregar subtareas */}
+                 {showSubtaskForm && (
+                      <div className="mb-4">
+                      <h3 className="font-bold text-gray-900 mb-2">Añadir subtareas</h3>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Título de la subtarea"
+                          className="p-2 border border-gray-300 rounded w-full"
+                          value={newSubtaskTitle}
+                          onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                        />
+                        <button
+                          className="bg-blue-500 px-3 py-2 rounded text-white hover:bg-blue-400 mt-2"
+                          onClick={addSubtask}
+                        >
+                          Añadir
+                        </button>
+                      </div>
+                    </div>
+                  )}
+               {/* Lista de subtareas */}
+              {selectedCard?.subtasks && selectedCard.subtasks.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-bold text-gray-900 mb-2">Subtareas</h3>
+                  {selectedCard.subtasks.map((subtask) => (
+                    <div
+                      key={subtask.id}
+                      className={`flex items-center justify-between p-2 mb-2 rounded ${
+                        subtask.completed ? "bg-green-100" : "bg-gray-100"
+                      }`}
+                    >
+                      <div>
+                        <input
+                          type="checkbox"
+                          checked={subtask.completed}
+                          onChange={() => toggleSubtaskCompletion(subtask.id)}
+                        />
+                        <span
+                          className={`ml-2 ${
+                            subtask.completed ? "line-through text-gray-500" : ""
+                          }`}
+                        >
+                          {subtask.title}
+                        </span>
+                      </div>
+                      <button
+                        className="text-red-500 text-sm"
+                        onClick={() => deleteSubtask(subtask.id)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+                
                 {/* Actividad */}
                 <div className="mb-4">
                   <div className="flex justify-between items-center">
@@ -673,13 +1290,78 @@ export function TableroPage() {
                   <PersonFill className="mr-2 bg-gray-100" size={18} /> Miembros
                 </button>
 
-                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
-                  <TagFill className="mr-2 bg-gray-100" size={18} /> Etiquetas
-                </button>
+                {/* Botón para mostrar etiquetas */}
+                <div className="w-full">
+                  <button
+                    className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold w-full"
+                    onClick={() => setShowEtiquetaList(!showEtiquetaList)} // Estado para mostrar lista de etiquetas
+                  >
+                    <TagFill className="mr-2 bg-gray-100" size={18} /> Etiquetas
+                  </button>
 
-                <button className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold">
-                  <CardChecklist className="mr-2 bg-gray-100" size={18} />{" "}
-                  Checklist
+                  {/* Lista desplegable de etiquetas guardadas */}
+                  {showEtiquetaList && (
+                    <div className="mt-2 bg-white border rounded shadow-md p-2">
+                      {etiquetas.map((etiqueta) => (
+                        <div
+                          key={etiqueta.id}
+                          className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                          onClick={() => toggleEtiquetaSeleccionada(etiqueta)} // Agregar o quitar etiqueta
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: etiqueta.color }}
+                            ></div>
+                            <span>{etiqueta.nombre}</span>
+                          </div>
+                          {selectedCard.etiquetas?.includes(etiqueta) && (
+                            <CheckCircleFill
+                              className="text-green-500"
+                              size={18}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Mostrar etiquetas seleccionadas */}
+                  {selectedCard && (
+                    <>
+                      {selectedCard.etiquetas?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {selectedCard.etiquetas.map((etiqueta) => (
+                            <div
+                              key={etiqueta.id}
+                              className="flex items-center gap-2 px-3 py-1 rounded shadow-md"
+                              style={{ backgroundColor: etiqueta.color }}
+                            >
+                              <span className="text-white font-bold">
+                                {etiqueta.nombre}
+                              </span>
+                              <button
+                                className="text-black font-bold px-2 py-1 rounded hover:bg-gray-200 hover:text-black"
+                                style={{ backgroundColor: "transparent" }}
+                                onClick={() =>
+                                  eliminarEtiquetaDeTarjeta(etiqueta)
+                                }
+                              >
+                                X
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <button
+                  className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center hover:bg-gray-200 font-bold"
+                  onClick={() => setShowSubtaskForm(!showSubtaskForm)}
+                >
+                  <CardChecklist className="mr-2 bg-gray-100" size={18} /> Checklist
                 </button>
 
                 <button

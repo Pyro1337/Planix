@@ -3,11 +3,38 @@ import { InputText } from "../../common/components/InputText";
 import { useDispatch } from "react-redux";
 import { espacioTrabajoActions } from "../handlers/redux";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export function CrearEspacioTrabajoPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const espaciosTrabajos = useSelector(
+    (state) => state.espacioTrabajo.espaciosTrabajos
+  );
+  const miembro_logueado = useSelector(
+    (state) => state.miembro.miembro_logueado
+  );
+
   const [espacioTrabajoName, setEspacioTrabajoName] = useState("");
+  const colors = [
+    {
+      colorIni: "from-red-500",
+      colorFin: "to-orange-500",
+    },
+    {
+      colorIni: "from-green-500",
+      colorFin: "to-blue-500",
+    },
+    {
+      colorIni: "from-yellow-500",
+      colorFin: "to-pink-500",
+    },
+    {
+      colorIni: "from-purple-500",
+      colorFin: "to-teal-500",
+    },
+  ];
   const onChange = (field) => (e) => {
     const value = e.target.value;
     if (field === "espacioTrabajoName") {
@@ -16,12 +43,22 @@ export function CrearEspacioTrabajoPage() {
   };
   const onSubmit = () => {
     if (espacioTrabajoName) {
+      // Seleccionar un color aleatorio del array `colors`
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+      // Crear el nuevo espacio de trabajo con el color aleatorio
       const espacioTrabajoNuevo = {
-        id: null,
+        id: espaciosTrabajos.length + 1,
         nombre: espacioTrabajoName,
-        colorIni: "from-purple-500",
-        colorFin: "to-teal-500",
+        colorIni: randomColor.colorIni,
+        colorFin: randomColor.colorFin,
+        tableros: [],
+        miembros: [],
+        owner: miembro_logueado,
+        active: true,
       };
+
+      // Dispatch y otras acciones
       dispatch(espacioTrabajoActions.addEspacioTrabajo(espacioTrabajoNuevo));
       setEspacioTrabajoName("");
       navigate("/mis-espacios-trabajo");

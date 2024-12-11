@@ -3,61 +3,24 @@ import { createSlice } from "@reduxjs/toolkit";
 const miembroSlice = createSlice({
   name: "miembro",
   initialState: {
-    miembros: [
-      {
-        nombre: "Lucas Goncalvez",
-        username: "@lucasgoncalvez",
-        actividad: "Última actividad: August 2024",
-        tableros: 2,
-        estado: "Administrador",
-      },
-      {
-        nombre: "Ivan Sánchez",
-        username: "@ivansanlafuria",
-        actividad: "No hay actividad reciente",
-        tableros: 0,
-        estado: "Pendiente",
-      },
-      {
-        nombre: "Eric Amarilla",
-        username: "@ericamarilla",
-        actividad: "No hay actividad reciente",
-        tableros: 1,
-        estado: "Colaborador",
-      },
-      {
-        nombre: "Juan Baez",
-        username: "@juanbaez",
-        actividad: "No hay actividad reciente",
-        tableros: 1,
-        estado: "Colaborador",
-      },
-      {
-        nombre: "Julián Esteban Cerdá",
-        username: "@juliancerda",
-        actividad: "No hay actividad reciente",
-        tableros: 0,
-        estado: "Colaborador",
-      },
-      {
-        nombre: "Delfina Mora",
-        username: "@delfinamora",
-        actividad: "No hay actividad reciente",
-        tableros: 0,
-        estado: "Colaborador",
-      },
-      {
-        nombre: "Juan Ignacio Mora",
-        username: "@juanignaciomora",
-        actividad: "No hay actividad reciente",
-        tableros: 0,
-        estado: "Colaborador",
-      },
-    ],
+    miembros: [],
+    //
+    miembro_logueado: null,
   },
   reducers: {
     setMiembros: (state, { payload = [] }) => {
       state.miembros = payload;
+    },
+    addMiembro: (state, { payload }) => {
+      const miembroCopy = state.miembros.find(
+        (m) => m.username === payload.username
+      );
+      if (miembroCopy) return;
+      state.miembros.push(payload);
+    },
+    //
+    setMiembroLogueado: (state, { payload }) => {
+      state.miembro_logueado = payload;
     },
   },
 });
