@@ -22,6 +22,7 @@ import {
   XLg,
   Trash,
   FunnelFill,
+  PencilFill,
   Tags,
 } from "react-bootstrap-icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
@@ -67,6 +68,8 @@ export function TableroPage() {
   const tableros = useSelector((state) => state.tablero.tableros);
   const [showSubtaskModal, setShowSubtaskModal] = useState(false);//para las subtareas
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");//para los titulos de la subtareas.
+  const [editingListId, setEditingListId] = useState(null); // ID de la lista en edición
+  const [tempListName, setTempListName] = useState(""); // Nombre temporal de la lista en edición
   const [descripcion, setDescripcion] = useState(""); // Estado para la descripción
   const [descripcionGuardada, setDescripcionGuardada] = useState(null); // Estado para la descripción guardada dentro del modal  
   const [follow, setFollow] = useState(false); // Estado para el seguir y siguiendo.
@@ -113,6 +116,32 @@ export function TableroPage() {
     }
   }, [columns, selectedColumn, selectedCard?.name]);
   
+      // Función para iniciar la edición
+    const startEditingList = (columnId, currentName) => {
+      setEditingListId(columnId); // Configura la lista en edición
+      setTempListName(currentName); // Llena el estado temporal con el nombre actual
+    };
+
+    // Función para guardar el nombre editado
+    const saveEditedListName = (columnId) => {
+      if (tempListName.trim() === "") return; // Evita guardar nombres vacíos
+
+      setColumns((prevColumns) => ({
+        ...prevColumns,
+        [columnId]: {
+          ...prevColumns[columnId],
+          name: tempListName, // Actualiza el nombre de la lista
+        },
+      }));
+
+      setEditingListId(null); // Salir del modo edición
+    };
+
+    // Función para cancelar la edición
+    const cancelEditingList = () => {
+      setEditingListId(null); // Salir del modo edición sin guardar
+      setTempListName(""); // Limpia el estado temporal
+    };
 
   //Estado para mostrar ocultar creacion de etiquetas
   const crearEtiqueta = () => {
@@ -251,6 +280,7 @@ export function TableroPage() {
           name: newCardName,
           description: "", 
           fechaCreacion: new Date(),
+          fechaVencimiento: selectedDate || null, // Asignar la fecha seleccionada o dejarla como null
           subtasks: [], // Agrega subtareas como una lista vacía
           fechaInicio: null,
           fechaFin: null,
@@ -349,10 +379,30 @@ export function TableroPage() {
 
   //Funcion para las fechas
   const handleDateChange = (date) => {
-    setSelectedDate(date); // Almacena la fecha seleccionada
+    if (!selectedCard || !selectedColumn) return;
 
     const currentDate = new Date(); // Fecha actual
-
+  
+    // Actualiza el estado de la fecha seleccionada
+    setSelectedDate(date);
+  
+    // Actualiza la tarjeta seleccionada con la nueva fecha de vencimiento
+    const updatedCard = { ...selectedCard, fechaVencimiento: date };
+  
+    // Actualizamos las columnas para reflejar el cambio en la tarjeta
+    const updatedColumns = {
+      ...columns,
+      [selectedColumn]: {
+        ...columns[selectedColumn],
+        items: columns[selectedColumn].items.map((item) =>
+          item.name === updatedCard.name ? updatedCard : item
+        ),
+      },
+    };
+  
+    // Actualizar el estado global de columnas y el estado local de la tarjeta seleccionada
+    setColumns(updatedColumns);
+    setSelectedCard(updatedCard);
     if (date < currentDate) {
       // Si la fecha seleccionada es menor que la actual, mover a "Atrasada"
       // Guardar la columna original solo si la tarjeta no estaba previamente en "Atrasada"
@@ -420,7 +470,7 @@ export function TableroPage() {
       setOriginalColumn(null); // Limpiar la columna original después de mover la tarjeta de vuelta
     }
 
-    closeModal(); // Cerrar el modal después de la acción
+    //closeModal(); // Cerrar el modal después de la acción
   };
 
   //Funcion para mover la tarjeta.
@@ -787,58 +837,82 @@ export function TableroPage() {
                       columnId === "atrasada" ? "border-4 border-red-600" : ""
                     }`}
                   >
-                    <div className="flex justify-between">
-                      <h2 className="font-bold text-md mb-2 flex items-center">
-                        {column.name}
-                        {columnId === "atrasada" && (
-                          <>
-                            <AlarmFill
-                              className="ml-2 text-red-500"
-                              size={20}
-                            />
-                            <span
-                              style={{
-                                animation: "blinkingText 1.5s infinite",
-                                color: "red",
-                              }}
-                            >
-                              ¡Atención!
-                            </span>
-                            <style>
-                              {`
-                          @keyframes blinkingText {
-                            0% { color: red; }
-                            50% { color: black; }
-                            100% { color: red; }
-                          }
-                        `}
-                            </style>
-                          </>
-                        )}
-                        {columnId === "pendiente" && (
-                          <Hourglass className="ml-2 text-gray-400" size={20} />
-                        )}
-                        {columnId === "enProgreso" && (
-                          <HourglassBottom
-                            className="ml-2 text-gray-400"
-                            size={20}
+                    <div className="flex justify-between items-center">
+                      {editingListId === columnId ? (
+                        // Modo de edición: Mostrar campo de entrada y botones
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={tempListName}
+                            onChange={(e) => setTempListName(e.target.value)}
+                            className="p-2 text-sm rounded border border-gray-300"
                           />
-                        )}
-                        {columnId === "completado" && (
-                          <CheckCircleFill
-                            className="ml-2 text-green-600"
-                            size={20}
-                          />
-                        )}
-                      </h2>
+                          <button
+                            className="text-green-500 font-bold"
+                            onClick={() => saveEditedListName(columnId)}
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            className="text-red-500 font-bold"
+                            onClick={cancelEditingList}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        // Modo normal: Mostrar nombre de lista con ícono de lápiz
+                        <h2 className="font-bold text-md mb-2 flex items-center">
+                          {column.name}
+                          {columnId === "atrasada" && (
+                            <>
+                              <AlarmFill className="ml-2 text-red-500" size={20} />
+                              <span
+                                style={{
+                                  animation: "blinkingText 1.5s infinite",
+                                  color: "red",
+                                }}
+                              >
+                                ¡Atención!
+                              </span>
+                              <style>
+                                {`
+                                  @keyframes blinkingText {
+                                    0% { color: red; }
+                                    50% { color: black; }
+                                    100% { color: red; }
+                                  }
+                                `}
+                              </style>
+                            </>
+                          )}
+                          {columnId === "pendiente" && (
+                            <Hourglass className="ml-2 text-gray-400" size={20} />
+                          )}
+                          {columnId === "enProgreso" && (
+                            <HourglassBottom className="ml-2 text-gray-400" size={20} />
+                          )}
+                          {columnId === "completado" && (
+                            <CheckCircleFill className="ml-2 text-green-600" size={20} />
+                          )}
+                          <button
+                            onClick={() => startEditingList(columnId, column.name)}
+                            className="ml-2 text-gray-500 hover:text-gray-200"
+                          >
+                            <PencilFill size={16} />
+                          </button>
+                        </h2>
+                      )}
+
                       {/* Botón de eliminar lista */}
                       <button
-                        onClick={() => deleteList(columnId)} // Evento para eliminar la lista
+                        onClick={() => deleteList(columnId)}
                         className="bg-black-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
                       >
                         <X className="w-6 h-6" />
                       </button>
                     </div>
+
                     {column.items.length > 3 && (
                       <span className="text-sm text-red-500">
                         Cantidad máxima de tareas
@@ -991,6 +1065,16 @@ export function TableroPage() {
                           year: "numeric",
                         })
                       : "No disponible"}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <strong>Fecha de vencimiento:</strong>{" "}
+                    {selectedCard.fechaVencimiento
+                      ? new Date(selectedCard.fechaVencimiento).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "No establecida"}
                   </p>
                 </div>
               )}
