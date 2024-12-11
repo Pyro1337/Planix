@@ -29,7 +29,6 @@ export function ReporteTableroPage() {
         } else {
           userItemCounts[item.user || "Desconocido"] = 1;
         }
-        console.log(userItemCounts, item);
       });
     });
     // Convierte el objeto en un arreglo en el formato solicitado
@@ -37,7 +36,6 @@ export function ReporteTableroPage() {
       name,
       value,
     }));
-    console.log("data", data);
     return data;
   };
 
