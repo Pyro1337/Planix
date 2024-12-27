@@ -72,7 +72,6 @@ export function TableroPage() {
   const [tempListName, setTempListName] = useState(""); // Nombre temporal de la lista en edición
   const [descripcion, setDescripcion] = useState(""); // Estado para la descripción
   const [descripcionGuardada, setDescripcionGuardada] = useState(null); // Estado para la descripción guardada dentro del modal  
-  const [follow, setFollow] = useState(false); // Estado para el seguir y siguiendo.
   const [showDetails, setShowDetails] = useState(false); // Estado para el botón "Mostrar Detalles"
   const [showDelete, setShowDelete] = useState(false); // Estado para el boton Archivar -> Eliminar
   const [columns, setColumns] = useState(tableros); //Selector de columnas
@@ -226,11 +225,6 @@ export function TableroPage() {
     });
 
     setSelectedCard(tarjetaActualizada);
-  };
-
-  // Estado para el botón seguir y siguiendo
-  const toggleFollow = () => {
-    setFollow(!follow); // Cambiar de true a false
   };
 
   // Estado botón "Mostrar Detalles"
@@ -1109,15 +1103,6 @@ export function TableroPage() {
                         ))}
                       </div>
                     )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={toggleFollow}
-                      className="bg-gray-100 px-3 py-1 rounded text-gray-900 flex items-center"
-                    >
-                      <EyeFill className="mr-2 bg-gray-100" size={18} />
-                      {follow ? "Siguiendo ✔" : "Seguir"}
-                    </button>
                   </div>
                 </div>
                 {!showUsers && (

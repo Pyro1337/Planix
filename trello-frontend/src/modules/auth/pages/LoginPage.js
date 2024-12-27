@@ -8,6 +8,7 @@ import { miembroActions } from "../../miembro/handlers/redux";
 import { useDispatch } from "react-redux";
 import { useSelect } from "@material-tailwind/react";
 import { useSelector } from "react-redux";
+import Swal from "sweetalert2";
 
 export function LoginPage() {
   const dispatch = useDispatch();
@@ -45,7 +46,12 @@ export function LoginPage() {
       dispatch(miembroActions.setMiembroLogueado(miembroCoincidencia));
       navigate("/mis-espacios-trabajo");
     } else {
-      alert("El usuario o la contraseña son incorrectos.");
+      Swal.fire({
+        title: "Error",
+        text: "El usuario o la contraseña son incorrectos",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     }
   };
 

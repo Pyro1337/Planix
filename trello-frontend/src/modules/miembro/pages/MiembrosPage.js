@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { espacioTrabajoActions } from "../../espacioTrabajo/handlers/redux";
 import { miembroActions } from "../handlers/redux";
+import Swal from "sweetalert2";
 
 export function MiembrosPage() {
   const dispatch = useDispatch();
@@ -66,13 +67,40 @@ export function MiembrosPage() {
     setOpenModalAgregar(false);
   };
 
-  const onAddUsuarioSistema = (usuario, index) => {
-    const agregarUsuario = window.confirm("¿Deseas agregar el usuario?");
-    if (agregarUsuario) {
-      dispatch(espacioTrabajoActions.addMiembro(usuario));
-    }
+  const onAddUsuarioSistema = (usuario) => {
+    Swal.fire({
+      title: "Añadir",
+      text: "¿Deseas agregar al usuario al espacio de trabajo?",
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, agregar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Verificar si usuario no está vacío antes de dispatch
+        if (usuario) {
+          dispatch(espacioTrabajoActions.addMiembro(usuario));
+          Swal.fire({
+            title: "Agregado",
+            text: "El usuario ha sido agregado con éxito.",
+            icon: "success",
+          });
+        } else {
+          Swal.fire({
+            title: "Error",
+            text: "No se pudo agregar el usuario. Verifica los datos e inténtalo nuevamente.",
+            icon: "error",
+          });
+        }
+      }
+    });
+  
+    // Cerrar el modal siempre, después de la acción
     setOpenModalInvitar(false);
   };
+  
 
   const onCloseModalInvitar = () => {
     setOpenModalInvitar(false);
